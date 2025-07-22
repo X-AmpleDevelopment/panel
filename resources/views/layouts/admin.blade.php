@@ -193,7 +193,7 @@
                 </div>
                 <a href="https://x-ampledevelopment.co.uk">X-Ample Development</a> &copy; 2015 - {{ date('Y') }} 
                 @if(starts_with(Route::currentRouteName(), 'admin.extensions'))
-                    â€¢ <a href="https://blueprint.zip/">Blueprint</a> &copy; 2023 - {{ date('Y') }}
+                    • <a href="https://blueprint.zip/">Blueprint</a> &copy; 2023 - {{ date('Y') }}
                 @endif
             </footer>
         </div>
