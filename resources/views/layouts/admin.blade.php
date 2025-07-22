@@ -1,3 +1,6 @@
+@include("blueprint.admin.admin")
+@yield('blueprint.lib')
+
 <!DOCTYPE html>
 <html>
     <head>
@@ -34,8 +37,11 @@
             <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
             <![endif]-->
         @show
+
+        @yield("blueprint.import")
     </head>
     <body class="hold-transition skin-blue fixed sidebar-mini">
+        @yield('blueprint.cache')
         <div class="wrapper">
             <header class="main-header">
                 <a href="{{ route('index') }}" class="logo">
@@ -56,6 +62,7 @@
                                     <span class="hidden-xs">{{ Auth::user()->name_first }} {{ Auth::user()->name_last }}</span>
                                 </a>
                             </li>
+                            @yield("blueprint.navigation")
                             <li>
                                 <li><a href="{{ route('index') }}" data-toggle="tooltip" data-placement="bottom" title="Exit Admin Control"><i class="fa fa-server"></i></a></li>
                             </li>
@@ -119,9 +126,34 @@
                         </li>
                         <li class="{{ ! starts_with(Route::currentRouteName(), 'admin.nests') ?: 'active' }}">
                             <a href="{{ route('admin.nests') }}">
-                                <i class="fa fa-th-large"></i> <span>Nests</span>
+                                <i class="fa fa-server"></i> <span>Nests</span>
                             </a>
                         </li>
+			<li class="header">X-AMPLE DEVELOPMENT</li>
+                        <li class="{{ ! starts_with(Route::currentRouteName(), 'admin.mounts') ?: 'active' }}">
+                            <a href="https://x-ampledevelopment.co.uk">
+                                <i class="fa fa-th-large"></i> <span>Website</span>
+                            </a>
+                        </li>
+                        <li class="{{ ! starts_with(Route::currentRouteName(), 'admin.nests') ?: 'active' }}">
+                            <a href="https://status.x-ampledevelopment.co.uk">
+                                <i class="fa fa-th-large"></i> <span>Live Status</span>
+                            </a>
+                        </li>
+			<li class="{{ ! starts_with(Route::currentRouteName(), 'admin.nests') ?: 'active' }}">
+                            <a href="https://support.x-ampledevelopment.co.uk">
+                                <i class="fa fa-th-large"></i> <span>Support Bot Dashboard</span>
+                            </a>
+                        </li>
+			<li class="header">BLUEPRINT</li>
+			<li class="{{ ! starts_with(Route::currentRouteName(), 'admin.nests') ?: 'active' }}">
+                            <a href="https://panel.x-ampledevelopment.co.uk/admin/extensions">
+                                <i class="fa fa-th-large"></i> <span>Extensions</span>
+                            </a>
+                        </li>
+
+
+
                     </ul>
                 </section>
             </aside>
@@ -159,7 +191,10 @@
                     <strong><i class="fa fa-fw {{ $appIsGit ? 'fa-git-square' : 'fa-code-fork' }}"></i></strong> {{ $appVersion }}<br />
                     <strong><i class="fa fa-fw fa-clock-o"></i></strong> {{ round(microtime(true) - LARAVEL_START, 3) }}s
                 </div>
-                Copyright &copy; 2015 - {{ date('Y') }} <a href="https://pterodactyl.io/">Pterodactyl Software</a>.
+                <a href="https://x-ampledevelopment.co.uk">X-Ample Development</a> &copy; 2015 - {{ date('Y') }} 
+                @if(starts_with(Route::currentRouteName(), 'admin.extensions'))
+                    â€¢ <a href="https://blueprint.zip/">Blueprint</a> &copy; 2023 - {{ date('Y') }}
+                @endif
             </footer>
         </div>
         @section('footer-scripts')
@@ -210,5 +245,7 @@
                 })
             </script>
         @show
+        @yield('blueprint.notifications')
+        @yield('blueprint.wrappers')
     </body>
 </html>
