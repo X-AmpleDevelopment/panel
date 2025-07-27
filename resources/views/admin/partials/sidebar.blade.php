@@ -41,17 +41,7 @@
 
             @include('admin.partials.sidebar-section', [
     'title' => 'XD | CONFIGURATION',
-    'items' => [
-        [
-            'title' => 'Settings',
-            'icon' => 'fa-cogs',
-            'route' => 'admin.settings',
-            'subitems' => [
-                ['title' => 'General', 'route' => 'admin.settings'],
-                ['title' => 'Mail', 'route' => 'admin.settings.mail'],
-                ['title' => 'Advanced', 'route' => 'admin.settings.advanced']
-            ]
-        ],
+    'items' => [    
         [
             'title' => 'Databases',
             'icon' => 'fa-database',
