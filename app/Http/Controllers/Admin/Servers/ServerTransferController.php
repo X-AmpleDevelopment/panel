@@ -14,7 +14,7 @@ use Pterodactyl\Services\Nodes\NodeJWTService;
 use Pterodactyl\Repositories\Eloquent\NodeRepository;
 use Pterodactyl\Repositories\Wings\DaemonTransferRepository;
 use Pterodactyl\Contracts\Repository\AllocationRepositoryInterface;
-
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 class ServerTransferController extends Controller
 {
     /**
@@ -27,6 +27,7 @@ class ServerTransferController extends Controller
         private DaemonTransferRepository $daemonTransferRepository,
         private NodeJWTService $nodeJWTService,
         private NodeRepository $nodeRepository,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -71,6 +72,12 @@ class ServerTransferController extends Controller
 
             $transfer->save();
 
+            $this->activityLogService->log(
+                'admin.servers.transfer',
+                auth()->user()->id,
+                'Started transfer of server ' . $server->id
+            );
+
             // Add the allocations to the server, so they cannot be automatically assigned while the transfer is in progress.
             $this->assignAllocationsToServer($server, $node_id, $allocation_id, $additional_allocations);
 
@@ -87,6 +94,12 @@ class ServerTransferController extends Controller
         });
 
         $this->alert->success(trans('admin/server.alerts.transfer_started'))->flash();
+
+        $this->activityLogService->log(
+            'admin.servers.transfer',
+            auth()->user()->id,
+            'Started transfer of server ' . $server->id
+        );
 
         return redirect()->route('admin.servers.view.manage', $server->id);
     }
@@ -112,6 +125,12 @@ class ServerTransferController extends Controller
 
         if (!empty($updateIds)) {
             $this->allocationRepository->updateWhereIn('id', $updateIds, ['server_id' => $server->id]);
+
+            $this->activityLogService->log(
+                'admin.servers.transfer',
+                auth()->user()->id,
+                'Assigned allocations to server ' . $server->id
+            );
         }
     }
 }

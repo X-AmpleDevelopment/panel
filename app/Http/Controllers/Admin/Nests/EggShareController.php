@@ -11,7 +11,7 @@ use Pterodactyl\Services\Eggs\Sharing\EggExporterService;
 use Pterodactyl\Services\Eggs\Sharing\EggImporterService;
 use Pterodactyl\Http\Requests\Admin\Egg\EggImportFormRequest;
 use Pterodactyl\Services\Eggs\Sharing\EggUpdateImporterService;
-
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 class EggShareController extends Controller
 {
     /**
@@ -22,6 +22,7 @@ class EggShareController extends Controller
         protected EggExporterService $exporterService,
         protected EggImporterService $importerService,
         protected EggUpdateImporterService $updateImporterService,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -31,6 +32,11 @@ class EggShareController extends Controller
     public function export(Egg $egg): Response
     {
         $filename = trim(preg_replace('/\W/', '-', kebab_case($egg->name)), '-');
+        $this->activityLogService->log(
+            'admin.eggs.share',
+            auth()->user()->id,
+            'Exported egg ' . $egg->id
+        );
 
         return response($this->exporterService->handle($egg->id), 200, [
             'Content-Transfer-Encoding' => 'binary',
@@ -53,6 +59,12 @@ class EggShareController extends Controller
         $egg = $this->importerService->handle($request->file('import_file'), $request->input('import_to_nest'));
         $this->alert->success(trans('admin/nests.eggs.notices.imported'))->flash();
 
+        $this->activityLogService->log(
+            'admin.eggs.share',
+            auth()->user()->id,
+            'Imported egg ' . $egg->id
+        );
+
         return redirect()->route('admin.nests.egg.view', ['egg' => $egg->id]);
     }
 
@@ -68,6 +80,12 @@ class EggShareController extends Controller
     {
         $this->updateImporterService->handle($egg, $request->file('import_file'));
         $this->alert->success(trans('admin/nests.eggs.notices.updated_via_import'))->flash();
+
+        $this->activityLogService->log(
+            'admin.eggs.share',
+            auth()->user()->id,
+            'Updated egg ' . $egg->id
+        );
 
         return redirect()->route('admin.nests.egg.view', ['egg' => $egg]);
     }

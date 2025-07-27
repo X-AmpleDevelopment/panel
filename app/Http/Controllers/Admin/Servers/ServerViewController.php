@@ -17,7 +17,7 @@ use Pterodactyl\Repositories\Eloquent\ServerRepository;
 use Pterodactyl\Traits\Controllers\JavascriptInjection;
 use Pterodactyl\Repositories\Eloquent\LocationRepository;
 use Pterodactyl\Repositories\Eloquent\DatabaseHostRepository;
-
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 class ServerViewController extends Controller
 {
     use JavascriptInjection;
@@ -34,6 +34,7 @@ class ServerViewController extends Controller
         private ServerRepository $repository,
         private EnvironmentService $environmentService,
         private ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -42,6 +43,12 @@ class ServerViewController extends Controller
      */
     public function index(Request $request, Server $server): View
     {
+        $this->activityLogService->log(
+            'admin.servers.view',
+            auth()->user()->id,
+            'Viewed server ' . $server->id
+        );
+
         return $this->view->make('admin.servers.view.index', compact('server'));
     }
 
@@ -50,6 +57,12 @@ class ServerViewController extends Controller
      */
     public function details(Request $request, Server $server): View
     {
+        $this->activityLogService->log(
+            'admin.servers.view',
+            auth()->user()->id,
+            'Viewed server details for ' . $server->id
+        );
+
         return $this->view->make('admin.servers.view.details', compact('server'));
     }
 
@@ -59,6 +72,12 @@ class ServerViewController extends Controller
     public function build(Request $request, Server $server): View
     {
         $allocations = $server->node->allocations->toBase();
+
+        $this->activityLogService->log(
+            'admin.servers.view',
+            auth()->user()->id,
+            'Viewed server build settings for ' . $server->id
+        );
 
         return $this->view->make('admin.servers.view.build', [
             'server' => $server,
@@ -87,6 +106,12 @@ class ServerViewController extends Controller
             })->keyBy('id'),
         ]);
 
+        $this->activityLogService->log(
+            'admin.servers.view',
+            auth()->user()->id,
+            'Viewed server startup settings for ' . $server->id
+        );
+
         return $this->view->make('admin.servers.view.startup', compact('server', 'nests'));
     }
 
@@ -95,6 +120,12 @@ class ServerViewController extends Controller
      */
     public function database(Request $request, Server $server): View
     {
+        $this->activityLogService->log(
+            'admin.servers.view',
+            auth()->user()->id,
+            'Viewed server databases for ' . $server->id
+        );
+
         return $this->view->make('admin.servers.view.database', [
             'hosts' => $this->databaseHostRepository->all(),
             'server' => $server,
@@ -108,6 +139,12 @@ class ServerViewController extends Controller
     {
         $server->load('mounts');
 
+        $this->activityLogService->log(
+            'admin.servers.view',
+            auth()->user()->id,
+            'Viewed server mounts for ' . $server->id
+        );
+
         return $this->view->make('admin.servers.view.mounts', [
             'mounts' => $this->mountRepository->getMountListForServer($server),
             'server' => $server,
@@ -118,7 +155,7 @@ class ServerViewController extends Controller
      * Returns the base server management page, or an exception if the server
      * is in a state that cannot be recovered from.
      *
-     * @throws DisplayException
+     * @throws \Pterodactyl\Exceptions\DisplayException
      */
     public function manage(Request $request, Server $server): View
     {
@@ -137,6 +174,12 @@ class ServerViewController extends Controller
             'nodeData' => $this->nodeRepository->getNodesForServerCreation(),
         ]);
 
+        $this->activityLogService->log(
+            'admin.servers.view',
+            auth()->user()->id,
+            'Viewed server management page for ' . $server->id
+        );
+
         return $this->view->make('admin.servers.view.manage', [
             'server' => $server,
             'locations' => $this->locationRepository->all(),
@@ -149,6 +192,12 @@ class ServerViewController extends Controller
      */
     public function delete(Request $request, Server $server): View
     {
+        $this->activityLogService->log(
+            'admin.servers.view',
+            auth()->user()->id,
+            'Viewed server deletion page for ' . $server->id
+        );
+
         return $this->view->make('admin.servers.view.delete', compact('server'));
     }
 }

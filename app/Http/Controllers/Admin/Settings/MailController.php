@@ -16,7 +16,7 @@ use Pterodactyl\Providers\SettingsServiceProvider;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Pterodactyl\Contracts\Repository\SettingsRepositoryInterface;
 use Pterodactyl\Http\Requests\Admin\Settings\MailSettingsFormRequest;
-
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 class MailController extends Controller
 {
     /**
@@ -28,6 +28,7 @@ class MailController extends Controller
         private Kernel $kernel,
         private SettingsRepositoryInterface $settings,
         private ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -69,6 +70,12 @@ class MailController extends Controller
         }
 
         $this->kernel->call('queue:restart');
+
+        $this->activityLogService->log(
+            'admin.settings.mail',
+            auth()->user()->id,
+            'Updated mail settings'
+        );
 
         return response('', 204);
     }

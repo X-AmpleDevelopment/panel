@@ -11,6 +11,7 @@ use Pterodactyl\Http\Controllers\Controller;
 use Pterodactyl\Services\Eggs\Scripts\InstallScriptService;
 use Pterodactyl\Contracts\Repository\EggRepositoryInterface;
 use Pterodactyl\Http\Requests\Admin\Egg\EggScriptFormRequest;
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 
 class EggScriptController extends Controller
 {
@@ -22,6 +23,7 @@ class EggScriptController extends Controller
         protected EggRepositoryInterface $repository,
         protected InstallScriptService $installScriptService,
         protected ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -36,6 +38,12 @@ class EggScriptController extends Controller
             ['nest_id', '=', $egg->nest_id],
             ['id', '!=', $egg],
         ]);
+
+        $this->activityLogService->log(
+            'admin.eggs.scripts',
+            auth()->user()->id,
+            'Viewed egg scripts for ' . $egg->id
+        );
 
         $rely = $this->repository->findWhere([
             ['copy_script_from', '=', $egg->id],
@@ -58,6 +66,11 @@ class EggScriptController extends Controller
     public function update(EggScriptFormRequest $request, Egg $egg): RedirectResponse
     {
         $this->installScriptService->handle($egg, $request->normalize());
+        $this->activityLogService->log(
+            'admin.eggs.scripts',
+            auth()->user()->id,
+            'Updated installation script for egg ' . $egg->id
+        );
         $this->alert->success(trans('admin/nests.eggs.notices.script_updated'))->flash();
 
         return redirect()->route('admin.nests.egg.scripts', $egg);

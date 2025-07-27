@@ -8,6 +8,7 @@ use Prologue\Alerts\AlertsMessageBag;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\View\Factory as ViewFactory;
 use Pterodactyl\Http\Controllers\Controller;
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 use Pterodactyl\Traits\Helpers\AvailableLanguages;
 use Pterodactyl\Services\Helpers\SoftwareVersionService;
 use Pterodactyl\Contracts\Repository\SettingsRepositoryInterface;
@@ -26,6 +27,7 @@ class IndexController extends Controller
         private SettingsRepositoryInterface $settings,
         private SoftwareVersionService $versionService,
         private ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -51,6 +53,12 @@ class IndexController extends Controller
         foreach ($request->normalize() as $key => $value) {
             $this->settings->set('settings::' . $key, $value);
         }
+
+        $this->activityLogService->log(
+            'admin.settings.update',
+            auth()->user()->id,
+            'Updated panel settings'
+        );
 
         $this->kernel->call('queue:restart');
         $this->alert->success('Panel settings have been updated successfully and the queue worker was restarted to apply these changes.')->flash();

@@ -9,6 +9,7 @@ use Pterodactyl\Models\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Http\RedirectResponse;
 use Prologue\Alerts\AlertsMessageBag;
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 use Spatie\QueryBuilder\QueryBuilder;
 use Illuminate\View\Factory as ViewFactory;
 use Pterodactyl\Exceptions\DisplayException;
@@ -37,6 +38,7 @@ class UserController extends Controller
         protected UserUpdateService $updateService,
         protected UserRepositoryInterface $repository,
         protected ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -65,6 +67,12 @@ class UserController extends Controller
      */
     public function create(): View
     {
+        $this->activityLogService->log(
+            'admin.users.create',
+            auth()->user()->id,
+            'Created new user!'
+        );
+
         return $this->view->make('admin.users.new', [
             'languages' => $this->getAvailableLanguages(true),
         ]);
@@ -75,9 +83,21 @@ class UserController extends Controller
      */
     public function view(User $user): View
     {
+        $activities = $this->activityLogService->getForActor(
+            $user->id,
+            request()->get('limit', 50)
+        ) ?? collect();
+
+        $this->activityLogService->log(
+            'admin.users.view',
+            auth()->user()->id,
+            'Viewed user ' . $user->username
+        );
+
         return $this->view->make('admin.users.view', [
             'user' => $user,
             'languages' => $this->getAvailableLanguages(true),
+            'activities' => $activities
         ]);
     }
 
@@ -85,13 +105,19 @@ class UserController extends Controller
      * Delete a user from the system.
      *
      * @throws \Exception
-     * @throws DisplayException
+     * @throws \Pterodactyl\Exceptions\DisplayException
      */
     public function delete(Request $request, User $user): RedirectResponse
     {
         if ($request->user()->id === $user->id) {
             throw new DisplayException($this->translator->get('admin/user.exceptions.user_has_servers'));
         }
+
+        $this->activityLogService->log(
+            'admin.users.delete',
+            auth()->user()->id,
+            'Deleted user ' . $user->username
+        );
 
         $this->deletionService->handle($user);
 
@@ -108,6 +134,12 @@ class UserController extends Controller
     {
         $user = $this->creationService->handle($request->normalize());
         $this->alert->success($this->translator->get('admin/user.notices.account_created'))->flash();
+
+        $this->activityLogService->log(
+            'admin.users.create',
+            auth()->user()->id,
+            'Created new user ' . $user->username
+        );
 
         return redirect()->route('admin.users.view', $user->id);
     }
@@ -126,27 +158,31 @@ class UserController extends Controller
 
         $this->alert->success(trans('admin/user.notices.account_updated'))->flash();
 
+        $this->activityLogService->log(
+            'admin.users.update',
+            auth()->user()->id,
+            'Updated user ' . $user->username
+        );
+
         return redirect()->route('admin.users.view', $user->id);
     }
 
     /**
      * Get a JSON response of users on the system.
      */
-    public function json(Request $request): Model|Collection
+    public function json(Request $request): Collection|Model
     {
-        $users = QueryBuilder::for(User::query())->allowedFilters(['email'])->paginate(25);
-
-        // Handle single user requests.
+        // Handle single user requests first
         if ($request->query('user_id')) {
             $user = User::query()->findOrFail($request->input('user_id'));
             $user->md5 = md5(strtolower($user->email));
-
             return $user;
         }
 
-        return $users->map(function ($item) {
+        // For multiple users, get the underlying Collection from pagination
+        $users = QueryBuilder::for(User::query())->allowedFilters(['email'])->paginate(25);
+        return $users->getCollection()->map(function ($item) {
             $item->md5 = md5(strtolower($item->email));
-
             return $item;
         });
     }

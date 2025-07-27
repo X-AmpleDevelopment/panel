@@ -8,6 +8,7 @@ use Pterodactyl\Models\ApiKey;
 use Illuminate\Http\JsonResponse;
 use Pterodactyl\Http\Controllers\Controller;
 use Illuminate\Contracts\Encryption\Encrypter;
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 use Pterodactyl\Services\Api\KeyCreationService;
 use Pterodactyl\Repositories\Eloquent\ApiKeyRepository;
 
@@ -20,6 +21,8 @@ class NodeAutoDeployController extends Controller
         private ApiKeyRepository $repository,
         private Encrypter $encrypter,
         private KeyCreationService $keyCreationService,
+        protected AdminActivityLogService $activityLogService
+
     ) {
     }
 
@@ -31,7 +34,7 @@ class NodeAutoDeployController extends Controller
      */
     public function __invoke(Request $request, Node $node): JsonResponse
     {
-        /** @var ApiKey|null $key */
+        /** @var \Pterodactyl\Models\ApiKey|null $key */
         $key = $this->repository->getApplicationKeys($request->user())
             ->filter(function (ApiKey $key) {
                 foreach ($key->getAttributes() as $permission => $value) {
@@ -52,6 +55,12 @@ class NodeAutoDeployController extends Controller
                 'memo' => 'Automatically generated node deployment key.',
                 'allowed_ips' => [],
             ], ['r_nodes' => 1]);
+
+            $this->activityLogService->log(
+                'admin.nodes.create_deployment_key',
+                auth()->user()->id,
+                'Created deployment key for node ' . $node->name
+            );
         }
 
         return new JsonResponse([

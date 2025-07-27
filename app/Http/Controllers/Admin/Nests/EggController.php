@@ -14,7 +14,7 @@ use Pterodactyl\Services\Eggs\EggDeletionService;
 use Pterodactyl\Http\Requests\Admin\Egg\EggFormRequest;
 use Pterodactyl\Contracts\Repository\EggRepositoryInterface;
 use Pterodactyl\Contracts\Repository\NestRepositoryInterface;
-
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 class EggController extends Controller
 {
     /**
@@ -28,6 +28,7 @@ class EggController extends Controller
         protected EggUpdateService $updateService,
         protected NestRepositoryInterface $nestRepository,
         protected ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -57,6 +58,11 @@ class EggController extends Controller
 
         $egg = $this->creationService->handle($data);
         $this->alert->success(trans('admin/nests.eggs.notices.egg_created'))->flash();
+        $this->activityLogService->log(
+            'admin.eggs.create',
+            auth()->user()->id,
+            'Created egg ' . $egg->id
+        );
 
         return redirect()->route('admin.nests.egg.view', $egg->id);
     }
@@ -90,6 +96,11 @@ class EggController extends Controller
 
         $this->updateService->handle($egg, $data);
         $this->alert->success(trans('admin/nests.eggs.notices.updated'))->flash();
+        $this->activityLogService->log(
+            'admin.eggs.update',
+            auth()->user()->id,
+            'Updated egg ' . $egg->id
+        );
 
         return redirect()->route('admin.nests.egg.view', $egg->id);
     }
@@ -105,13 +116,19 @@ class EggController extends Controller
         $this->deletionService->handle($egg->id);
         $this->alert->success(trans('admin/nests.eggs.notices.deleted'))->flash();
 
+        $this->activityLogService->log(
+            'admin.eggs.delete',
+            auth()->user()->id,
+            'Deleted egg ' . $egg->id
+        );
+
         return redirect()->route('admin.nests.view', $egg->nest_id);
     }
 
     /**
      * Normalizes a string of docker image data into the expected egg format.
      */
-    protected function normalizeDockerImages(?string $input = null): array
+    protected function normalizeDockerImages(string $input = null): array
     {
         $data = array_map(fn ($value) => trim($value), explode("\n", $input ?? ''));
 

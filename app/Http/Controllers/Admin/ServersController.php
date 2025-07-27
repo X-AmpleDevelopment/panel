@@ -14,6 +14,7 @@ use Prologue\Alerts\AlertsMessageBag;
 use Pterodactyl\Exceptions\DisplayException;
 use Pterodactyl\Http\Controllers\Controller;
 use Illuminate\Validation\ValidationException;
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 use Pterodactyl\Services\Servers\SuspensionService;
 use Pterodactyl\Repositories\Eloquent\MountRepository;
 use Pterodactyl\Services\Servers\ServerDeletionService;
@@ -58,13 +59,14 @@ class ServersController extends Controller
         protected ServerConfigurationStructureService $serverConfigurationStructureService,
         protected StartupModificationService $startupModificationService,
         protected SuspensionService $suspensionService,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
     /**
      * Update the details for a server.
      *
-     * @throws DataValidationException
+     * @throws \Pterodactyl\Exceptions\Model\DataValidationException
      * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
      */
     public function setDetails(Request $request, Server $server): RedirectResponse
@@ -75,14 +77,20 @@ class ServersController extends Controller
 
         $this->alert->success(trans('admin/server.alerts.details_updated'))->flash();
 
+        $this->activityLogService->log(
+            'admin.servers.details',
+            auth()->user()->id,
+            'Updated server details for ' . $server->name
+        );
+
         return redirect()->route('admin.servers.view.details', $server->id);
     }
 
     /**
      * Toggles the installation status for a server.
      *
-     * @throws DisplayException
-     * @throws DataValidationException
+     * @throws \Pterodactyl\Exceptions\DisplayException
+     * @throws \Pterodactyl\Exceptions\Model\DataValidationException
      * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
      */
     public function toggleInstall(Server $server): RedirectResponse
@@ -97,14 +105,20 @@ class ServersController extends Controller
 
         $this->alert->success(trans('admin/server.alerts.install_toggled'))->flash();
 
+        $this->activityLogService->log(
+            'admin.servers.toggle_install',
+            auth()->user()->id,
+            'Toggled installation status for server ' . $server->name
+        );
+
         return redirect()->route('admin.servers.view.manage', $server->id);
     }
 
     /**
      * Reinstalls the server with the currently assigned service.
      *
-     * @throws DisplayException
-     * @throws DataValidationException
+     * @throws \Pterodactyl\Exceptions\DisplayException
+     * @throws \Pterodactyl\Exceptions\Model\DataValidationException
      * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
      */
     public function reinstallServer(Server $server): RedirectResponse
@@ -112,14 +126,20 @@ class ServersController extends Controller
         $this->reinstallService->handle($server);
         $this->alert->success(trans('admin/server.alerts.server_reinstalled'))->flash();
 
+        $this->activityLogService->log(
+            'admin.servers.reinstall',
+            auth()->user()->id,
+            'Reinstalled server ' . $server->name
+        );
+
         return redirect()->route('admin.servers.view.manage', $server->id);
     }
 
     /**
      * Manage the suspension status for a server.
      *
-     * @throws DisplayException
-     * @throws DataValidationException
+     * @throws \Pterodactyl\Exceptions\DisplayException
+     * @throws \Pterodactyl\Exceptions\Model\DataValidationException
      * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
      */
     public function manageSuspension(Request $request, Server $server): RedirectResponse
@@ -129,15 +149,21 @@ class ServersController extends Controller
             'status' => $request->input('action') . 'ed',
         ]))->flash();
 
+        $this->activityLogService->log(
+            'admin.servers.manage_suspension',
+            auth()->user()->id,
+            'Toggled suspension status for server ' . $server->name
+        );
+
         return redirect()->route('admin.servers.view.manage', $server->id);
     }
 
     /**
      * Update the build configuration for a server.
      *
-     * @throws DisplayException
+     * @throws \Pterodactyl\Exceptions\DisplayException
      * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
-     * @throws ValidationException
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function updateBuild(Request $request, Server $server): RedirectResponse
     {
@@ -153,13 +179,19 @@ class ServersController extends Controller
 
         $this->alert->success(trans('admin/server.alerts.build_updated'))->flash();
 
+        $this->activityLogService->log(
+            'admin.servers.update_build',
+            auth()->user()->id,
+            'Updated build configuration for server ' . $server->name
+        );
+
         return redirect()->route('admin.servers.view.build', $server->id);
     }
 
     /**
      * Start the server deletion process.
      *
-     * @throws DisplayException
+     * @throws \Pterodactyl\Exceptions\DisplayException
      * @throws \Throwable
      */
     public function delete(Request $request, Server $server): RedirectResponse
@@ -167,13 +199,19 @@ class ServersController extends Controller
         $this->deletionService->withForce($request->filled('force_delete'))->handle($server);
         $this->alert->success(trans('admin/server.alerts.server_deleted'))->flash();
 
+        $this->activityLogService->log(
+            'admin.servers.delete',
+            auth()->user()->id,
+            'Deleted server ' . $server->name
+        );
+
         return redirect()->route('admin.servers');
     }
 
     /**
      * Update the startup command as well as variables.
      *
-     * @throws ValidationException
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function saveStartup(Request $request, Server $server): RedirectResponse
     {
@@ -193,6 +231,12 @@ class ServersController extends Controller
 
         $this->alert->success(trans('admin/server.alerts.startup_changed'))->flash();
 
+        $this->activityLogService->log(
+            'admin.servers.save_startup',
+            auth()->user()->id,
+            'Updated startup configuration for server ' . $server->name
+        );
+
         return redirect()->route('admin.servers.view.startup', $server->id);
     }
 
@@ -210,6 +254,12 @@ class ServersController extends Controller
             'max_connections' => $request->input('max_connections'),
         ]);
 
+        $this->activityLogService->log(
+            'admin.servers.new_database',
+            auth()->user()->id,
+            'Created new database for server ' . $server->name
+        );
+
         return redirect()->route('admin.servers.view.database', $server->id)->withInput();
     }
 
@@ -220,10 +270,16 @@ class ServersController extends Controller
      */
     public function resetDatabasePassword(Request $request, Server $server): Response
     {
-        /** @var Database $database */
+        /** @var \Pterodactyl\Models\Database $database */
         $database = $server->databases()->findOrFail($request->input('database'));
 
         $this->databasePasswordService->handle($database);
+
+        $this->activityLogService->log(
+            'admin.servers.reset_database_password',
+            auth()->user()->id,
+            'Reset database password for server ' . $server->name
+        );
 
         return response('', 204);
     }
@@ -236,6 +292,12 @@ class ServersController extends Controller
     public function deleteDatabase(Server $server, Database $database): Response
     {
         $this->databaseManagementService->delete($database);
+
+        $this->activityLogService->log(
+            'admin.servers.delete_database',
+            auth()->user()->id,
+            'Deleted database for server ' . $server->name
+        );
 
         return response('', 204);
     }
@@ -256,6 +318,12 @@ class ServersController extends Controller
 
         $this->alert->success('Mount was added successfully.')->flash();
 
+        $this->activityLogService->log(
+            'admin.servers.add_mount',
+            auth()->user()->id,
+            'Added mount to server ' . $server->name
+        );
+
         return redirect()->route('admin.servers.view.mounts', $server->id);
     }
 
@@ -267,6 +335,12 @@ class ServersController extends Controller
         MountServer::where('mount_id', $mount->id)->where('server_id', $server->id)->delete();
 
         $this->alert->success('Mount was removed successfully.')->flash();
+
+        $this->activityLogService->log(
+            'admin.servers.delete_mount',
+            auth()->user()->id,
+            'Deleted mount from server ' . $server->name
+        );
 
         return redirect()->route('admin.servers.view.mounts', $server->id);
     }

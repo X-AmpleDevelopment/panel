@@ -14,7 +14,7 @@ use Pterodactyl\Services\Eggs\Variables\VariableUpdateService;
 use Pterodactyl\Http\Requests\Admin\Egg\EggVariableFormRequest;
 use Pterodactyl\Services\Eggs\Variables\VariableCreationService;
 use Pterodactyl\Contracts\Repository\EggVariableRepositoryInterface;
-
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 class EggVariableController extends Controller
 {
     /**
@@ -27,6 +27,7 @@ class EggVariableController extends Controller
         protected EggRepositoryInterface $repository,
         protected EggVariableRepositoryInterface $variableRepository,
         protected ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -38,6 +39,11 @@ class EggVariableController extends Controller
     public function view(int $egg): View
     {
         $egg = $this->repository->getWithVariables($egg);
+        $this->activityLogService->log(
+            'admin.eggs.variables',
+            auth()->user()->id,
+            'Viewed variables for egg ' . $egg->id
+        );
 
         return $this->view->make('admin.eggs.variables', ['egg' => $egg]);
     }
@@ -53,6 +59,12 @@ class EggVariableController extends Controller
     {
         $this->creationService->handle($egg->id, $request->normalize());
         $this->alert->success(trans('admin/nests.variables.notices.variable_created'))->flash();
+
+        $this->activityLogService->log(
+            'admin.eggs.variables',
+            auth()->user()->id,
+            'Created variable for egg ' . $egg->id
+        );
 
         return redirect()->route('admin.nests.egg.variables', $egg->id);
     }
@@ -72,6 +84,12 @@ class EggVariableController extends Controller
             'variable' => htmlspecialchars($variable->name),
         ]))->flash();
 
+        $this->activityLogService->log(
+            'admin.eggs.variables',
+            auth()->user()->id,
+            'Updated variable for egg ' . $egg->id
+        );
+
         return redirect()->route('admin.nests.egg.variables', $egg->id);
     }
 
@@ -84,6 +102,12 @@ class EggVariableController extends Controller
         $this->alert->success(trans('admin/nests.variables.notices.variable_deleted', [
             'variable' => htmlspecialchars($variable->name),
         ]))->flash();
+
+        $this->activityLogService->log(
+            'admin.eggs.variables',
+            auth()->user()->id,
+            'Deleted variable for egg ' . $variable->egg_id
+        );
 
         return redirect()->route('admin.nests.egg.variables', $egg);
     }

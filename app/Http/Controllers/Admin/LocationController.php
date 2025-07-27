@@ -10,6 +10,7 @@ use Illuminate\View\Factory as ViewFactory;
 use Pterodactyl\Exceptions\DisplayException;
 use Pterodactyl\Http\Controllers\Controller;
 use Pterodactyl\Http\Requests\Admin\LocationFormRequest;
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 use Pterodactyl\Services\Locations\LocationUpdateService;
 use Pterodactyl\Services\Locations\LocationCreationService;
 use Pterodactyl\Services\Locations\LocationDeletionService;
@@ -27,6 +28,7 @@ class LocationController extends Controller
         protected LocationRepositoryInterface $repository,
         protected LocationUpdateService $updateService,
         protected ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -47,6 +49,12 @@ class LocationController extends Controller
      */
     public function view(int $id): View
     {
+        $this->activityLogService->log(
+            'admin.locations.view',
+            auth()->user()->id,
+            'Viewed location ' . $id
+        );
+
         return $this->view->make('admin.locations.view', [
             'location' => $this->repository->getWithNodes($id),
         ]);
@@ -61,6 +69,12 @@ class LocationController extends Controller
     {
         $location = $this->creationService->handle($request->normalize());
         $this->alert->success('Location was created successfully.')->flash();
+
+        $this->activityLogService->log(
+            'admin.locations.create',
+            auth()->user()->id,
+            'Created new location '
+        );
 
         return redirect()->route('admin.locations.view', $location->id);
     }
@@ -79,6 +93,12 @@ class LocationController extends Controller
         $this->updateService->handle($location->id, $request->normalize());
         $this->alert->success('Location was updated successfully.')->flash();
 
+        $this->activityLogService->log(
+            'admin.locations.update',
+            auth()->user()->id,
+            'Updated location ' . $location->id
+        );
+
         return redirect()->route('admin.locations.view', $location->id);
     }
 
@@ -86,12 +106,18 @@ class LocationController extends Controller
      * Delete a location from the system.
      *
      * @throws \Exception
-     * @throws DisplayException
+     * @throws \Pterodactyl\Exceptions\DisplayException
      */
     public function delete(Location $location): RedirectResponse
     {
         try {
             $this->deletionService->handle($location->id);
+
+            $this->activityLogService->log(
+                'admin.locations.delete',
+                auth()->user()->id,
+                'Deleted location ' . $location->id
+            );
 
             return redirect()->route('admin.locations');
         } catch (DisplayException $ex) {

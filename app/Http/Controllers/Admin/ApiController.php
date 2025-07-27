@@ -11,6 +11,7 @@ use Prologue\Alerts\AlertsMessageBag;
 use Pterodactyl\Services\Acl\Api\AdminAcl;
 use Illuminate\View\Factory as ViewFactory;
 use Pterodactyl\Http\Controllers\Controller;
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 use Pterodactyl\Services\Api\KeyCreationService;
 use Pterodactyl\Contracts\Repository\ApiKeyRepositoryInterface;
 use Pterodactyl\Http\Requests\Admin\Api\StoreApplicationApiKeyRequest;
@@ -25,6 +26,7 @@ class ApiController extends Controller
         private ApiKeyRepositoryInterface $repository,
         private KeyCreationService $keyCreationService,
         private ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -48,6 +50,12 @@ class ApiController extends Controller
         $resources = AdminAcl::getResourceList();
         sort($resources);
 
+        $this->activityLogService->log(
+            'admin.api.create',
+            auth()->user()->id,
+            'Created new application API key'
+        );
+
         return $this->view->make('admin.api.new', [
             'resources' => $resources,
             'permissions' => [
@@ -70,6 +78,12 @@ class ApiController extends Controller
             'user_id' => $request->user()->id,
         ], $request->getKeyPermissions());
 
+        $this->activityLogService->log(
+            'admin.api.create',
+            auth()->user()->id,
+            'Created new application API key'
+        );
+
         $this->alert->success('A new application API key has been generated for your account.')->flash();
 
         return redirect()->route('admin.api.index');
@@ -81,6 +95,12 @@ class ApiController extends Controller
     public function delete(Request $request, string $identifier): Response
     {
         $this->repository->deleteApplicationKey($request->user(), $identifier);
+
+        $this->activityLogService->log(
+            'admin.api.delete',
+            auth()->user()->id,
+            'Deleted application API key ' . $identifier
+        );
 
         return response('', 204);
     }

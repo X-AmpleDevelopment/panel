@@ -10,13 +10,13 @@ use Spatie\QueryBuilder\AllowedFilter;
 use Pterodactyl\Http\Controllers\Controller;
 use Pterodactyl\Models\Filters\AdminServerFilter;
 use Illuminate\Contracts\View\Factory as ViewFactory;
-
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 class ServerController extends Controller
 {
     /**
      * ServerController constructor.
      */
-    public function __construct(private ViewFactory $view)
+    public function __construct(private ViewFactory $view, protected AdminActivityLogService $activityLogService)
     {
     }
 
@@ -32,6 +32,12 @@ class ServerController extends Controller
                 AllowedFilter::custom('*', new AdminServerFilter()),
             ])
             ->paginate(config()->get('pterodactyl.paginate.admin.servers'));
+
+        $this->activityLogService->log(
+            'admin.servers.index',
+            auth()->user()->id,
+            'Viewed all servers'
+        );
 
         return $this->view->make('admin.servers.index', ['servers' => $servers]);
     }

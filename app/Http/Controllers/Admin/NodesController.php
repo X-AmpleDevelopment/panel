@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Prologue\Alerts\AlertsMessageBag;
 use Illuminate\View\Factory as ViewFactory;
 use Pterodactyl\Http\Controllers\Controller;
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 use Pterodactyl\Services\Nodes\NodeUpdateService;
 use Illuminate\Cache\Repository as CacheRepository;
 use Pterodactyl\Services\Nodes\NodeCreationService;
@@ -45,6 +46,8 @@ class NodesController extends Controller
         protected NodeUpdateService $updateService,
         protected SoftwareVersionService $versionService,
         protected ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
+
     ) {
     }
 
@@ -60,6 +63,12 @@ class NodesController extends Controller
             return redirect()->route('admin.locations');
         }
 
+        $this->activityLogService->log(
+            'admin.nodes.create',
+            auth()->user()->id,
+            'Created new node'
+        );
+
         return $this->view->make('admin.nodes.new', ['locations' => $locations]);
     }
 
@@ -72,6 +81,12 @@ class NodesController extends Controller
     {
         $node = $this->creationService->handle($request->normalize());
         $this->alert->info(trans('admin/node.notices.node_created'))->flash();
+
+        $this->activityLogService->log(
+            'admin.nodes.create',
+            auth()->user()->id,
+            'Created new node ' . $node->name
+        );
 
         return redirect()->route('admin.nodes.view.allocation', $node->id);
     }
@@ -88,6 +103,12 @@ class NodesController extends Controller
         $this->updateService->handle($node, $request->normalize(), $request->input('reset_secret') === 'on');
         $this->alert->success(trans('admin/node.notices.node_updated'))->flash();
 
+        $this->activityLogService->log(
+            'admin.nodes.update_settings',
+            auth()->user()->id,
+            'Updated node settings for ' . $node->name
+        );
+
         return redirect()->route('admin.nodes.view.settings', $node->id)->withInput();
     }
 
@@ -99,6 +120,12 @@ class NodesController extends Controller
     public function allocationRemoveSingle(int $node, Allocation $allocation): Response
     {
         $this->allocationDeletionService->handle($allocation);
+
+        $this->activityLogService->log(
+            'admin.nodes.allocation_remove_single',
+            auth()->user()->id,
+            'Removed allocation from node ' . $node
+        );
 
         return response('', 204);
     }
@@ -117,6 +144,12 @@ class NodesController extends Controller
             $this->allocationRemoveSingle($node, $allocation);
         }
 
+        $this->activityLogService->log(
+            'admin.nodes.allocation_remove_multiple',
+            auth()->user()->id,
+            'Removed multiple allocations from node ' . $node
+        );
+
         return response('', 204);
     }
 
@@ -134,6 +167,12 @@ class NodesController extends Controller
         $this->alert->success(trans('admin/node.notices.unallocated_deleted', ['ip' => htmlspecialchars($request->input('ip'))]))
             ->flash();
 
+        $this->activityLogService->log(
+            'admin.nodes.allocation_remove_block',
+            auth()->user()->id,
+            'Removed all allocations from node ' . $node
+        );
+
         return redirect()->route('admin.nodes.view.allocation', $node);
     }
 
@@ -148,6 +187,12 @@ class NodesController extends Controller
         $this->allocationRepository->update($request->input('allocation_id'), [
             'ip_alias' => (empty($request->input('alias'))) ? null : $request->input('alias'),
         ]);
+
+        $this->activityLogService->log(
+            'admin.nodes.allocation_set_alias',
+            auth()->user()->id,
+            'Set alias for allocation ' . $request->input('allocation_id')
+        );
 
         return response('', 204);
     }
@@ -165,6 +210,12 @@ class NodesController extends Controller
         $this->assignmentService->handle($node, $request->normalize());
         $this->alert->success(trans('admin/node.notices.allocations_added'))->flash();
 
+        $this->activityLogService->log(
+            'admin.nodes.create_allocation',
+            auth()->user()->id,
+            'Created new allocation for node ' . $node->name
+        );
+
         return redirect()->route('admin.nodes.view.allocation', $node->id);
     }
 
@@ -177,6 +228,12 @@ class NodesController extends Controller
     {
         $this->deletionService->handle($node);
         $this->alert->success(trans('admin/node.notices.node_deleted'))->flash();
+
+        $this->activityLogService->log(
+            'admin.nodes.delete',
+            auth()->user()->id,
+            'Deleted node ' . $node
+        );
 
         return redirect()->route('admin.nodes');
     }

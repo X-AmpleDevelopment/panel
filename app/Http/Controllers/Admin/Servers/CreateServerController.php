@@ -13,7 +13,7 @@ use Pterodactyl\Repositories\Eloquent\NestRepository;
 use Pterodactyl\Repositories\Eloquent\NodeRepository;
 use Pterodactyl\Http\Requests\Admin\ServerFormRequest;
 use Pterodactyl\Services\Servers\ServerCreationService;
-
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 class CreateServerController extends Controller
 {
     /**
@@ -25,6 +25,7 @@ class CreateServerController extends Controller
         private NodeRepository $nodeRepository,
         private ServerCreationService $creationService,
         private ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -53,6 +54,12 @@ class CreateServerController extends Controller
             })->keyBy('id'),
         ]);
 
+        $this->activityLogService->log(
+            'admin.servers.create',
+            auth()->user()->id,
+            'Viewed create server page'
+        );
+
         return $this->view->make('admin.servers.new', [
             'locations' => Location::all(),
             'nests' => $nests,
@@ -79,6 +86,12 @@ class CreateServerController extends Controller
         $server = $this->creationService->handle($data);
 
         $this->alert->success(trans('admin/server.alerts.server_created'))->flash();
+
+        $this->activityLogService->log(
+            'admin.servers.create',
+            auth()->user()->id,
+            'Created new server ' . $server->id
+        );
 
         return new RedirectResponse('/admin/servers/view/' . $server->id);
     }

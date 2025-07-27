@@ -8,13 +8,13 @@ use Pterodactyl\Models\Node;
 use Illuminate\Http\JsonResponse;
 use Pterodactyl\Http\Controllers\Controller;
 use Pterodactyl\Repositories\Wings\DaemonConfigurationRepository;
-
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 class SystemInformationController extends Controller
 {
     /**
      * SystemInformationController constructor.
      */
-    public function __construct(private DaemonConfigurationRepository $repository)
+    public function __construct(private DaemonConfigurationRepository $repository, protected AdminActivityLogService $activityLogService)
     {
     }
 
@@ -26,7 +26,11 @@ class SystemInformationController extends Controller
     public function __invoke(Request $request, Node $node): JsonResponse
     {
         $data = $this->repository->setNode($node)->getSystemInformation();
-
+        $this->activityLogService->log(
+            'admin.nodes.system-information',
+            auth()->user()->id,
+            'Retrieved system information for node ' . $node->id
+        );
         return new JsonResponse([
             'version' => $data['version'] ?? '',
             'system' => [

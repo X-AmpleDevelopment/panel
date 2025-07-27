@@ -2,6 +2,7 @@
 
 namespace Pterodactyl\Http\Controllers\Admin;
 
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 use Ramsey\Uuid\Uuid;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ class MountController extends Controller
         protected LocationRepositoryInterface $locationRepository,
         protected MountRepository $repository,
         protected ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -52,6 +54,12 @@ class MountController extends Controller
         $nests = Nest::query()->with('eggs')->get();
         $locations = Location::query()->with('nodes')->get();
 
+        $this->activityLogService->log(
+            'admin.mounts.view',
+            auth()->user()->id,
+            'Viewed mount ' . $id
+        );
+
         return $this->view->make('admin.mounts.view', [
             'mount' => $this->repository->getWithRelations($id),
             'nests' => $nests,
@@ -72,6 +80,12 @@ class MountController extends Controller
         $model->saveOrFail();
         $mount = $model->fresh();
 
+        $this->activityLogService->log(
+            'admin.mounts.create',
+            auth()->user()->id,
+            'Created new mount ' . $mount->name
+        );
+
         $this->alert->success('Mount was created successfully.')->flash();
 
         return redirect()->route('admin.mounts.view', $mount->id);
@@ -90,6 +104,12 @@ class MountController extends Controller
 
         $mount->forceFill($request->validated())->save();
 
+        $this->activityLogService->log(
+            'admin.mounts.update',
+            auth()->user()->id,
+            'Updated mount ' . $mount->name
+        );
+
         $this->alert->success('Mount was updated successfully.')->flash();
 
         return redirect()->route('admin.mounts.view', $mount->id);
@@ -103,6 +123,12 @@ class MountController extends Controller
     public function delete(Mount $mount): RedirectResponse
     {
         $mount->delete();
+
+        $this->activityLogService->log(
+            'admin.mounts.delete',
+            auth()->user()->id,
+            'Deleted mount ' . $mount->name
+        );
 
         return redirect()->route('admin.mounts');
     }
@@ -120,6 +146,12 @@ class MountController extends Controller
         if (count($eggs) > 0) {
             $mount->eggs()->attach($eggs);
         }
+
+        $this->activityLogService->log(
+            'admin.mounts.add_eggs',
+            auth()->user()->id,
+            'Added eggs to mount ' . $mount->name
+        );
 
         $this->alert->success('Mount was updated successfully.')->flash();
 
@@ -140,6 +172,12 @@ class MountController extends Controller
 
         $this->alert->success('Mount was updated successfully.')->flash();
 
+        $this->activityLogService->log(
+            'admin.mounts.add_nodes',
+            auth()->user()->id,
+            'Added nodes to mount ' . $mount->name
+        );
+
         return redirect()->route('admin.mounts.view', $mount->id);
     }
 
@@ -150,6 +188,12 @@ class MountController extends Controller
     {
         $mount->eggs()->detach($egg_id);
 
+        $this->activityLogService->log(
+            'admin.mounts.delete_egg',
+            auth()->user()->id,
+            'Deleted egg from mount ' . $mount->name
+        );
+
         return response('', 204);
     }
 
@@ -159,6 +203,12 @@ class MountController extends Controller
     public function deleteNode(Mount $mount, int $node_id): Response
     {
         $mount->nodes()->detach($node_id);
+
+        $this->activityLogService->log(
+            'admin.mounts.delete_node',
+            auth()->user()->id,
+            'Deleted node from mount ' . $mount->name
+        );
 
         return response('', 204);
     }

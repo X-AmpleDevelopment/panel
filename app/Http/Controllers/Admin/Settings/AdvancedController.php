@@ -11,6 +11,7 @@ use Pterodactyl\Http\Controllers\Controller;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Pterodactyl\Contracts\Repository\SettingsRepositoryInterface;
 use Pterodactyl\Http\Requests\Admin\Settings\AdvancedSettingsFormRequest;
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 
 class AdvancedController extends Controller
 {
@@ -23,6 +24,7 @@ class AdvancedController extends Controller
         private Kernel $kernel,
         private SettingsRepositoryInterface $settings,
         private ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -38,6 +40,12 @@ class AdvancedController extends Controller
         ) {
             $showRecaptchaWarning = true;
         }
+
+        $this->activityLogService->log(
+            'admin.settings.advanced',
+            auth()->user()->id,
+            'Viewed advanced settings'
+        );
 
         return $this->view->make('admin.settings.advanced', [
             'showRecaptchaWarning' => $showRecaptchaWarning,
@@ -56,6 +64,12 @@ class AdvancedController extends Controller
 
         $this->kernel->call('queue:restart');
         $this->alert->success('Advanced settings have been updated successfully and the queue worker was restarted to apply these changes.')->flash();
+
+        $this->activityLogService->log(
+            'admin.settings.advanced',
+            auth()->user()->id,
+            'Updated advanced settings'
+        );
 
         return redirect()->route('admin.settings.advanced');
     }

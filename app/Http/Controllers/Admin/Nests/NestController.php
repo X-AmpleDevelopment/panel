@@ -12,7 +12,7 @@ use Pterodactyl\Services\Nests\NestCreationService;
 use Pterodactyl\Services\Nests\NestDeletionService;
 use Pterodactyl\Contracts\Repository\NestRepositoryInterface;
 use Pterodactyl\Http\Requests\Admin\Nest\StoreNestFormRequest;
-
+use Pterodactyl\Services\Admin\AdminActivityLogService;
 class NestController extends Controller
 {
     /**
@@ -25,6 +25,7 @@ class NestController extends Controller
         protected NestRepositoryInterface $repository,
         protected NestUpdateService $nestUpdateService,
         protected ViewFactory $view,
+        protected AdminActivityLogService $activityLogService
     ) {
     }
 
@@ -35,6 +36,12 @@ class NestController extends Controller
      */
     public function index(): View
     {
+        $this->activityLogService->log(
+            'admin.nests.index',
+            auth()->user()->id,
+            'Viewed nests'
+        );
+
         return $this->view->make('admin.nests.index', [
             'nests' => $this->repository->getWithCounts(),
         ]);
@@ -45,6 +52,12 @@ class NestController extends Controller
      */
     public function create(): View
     {
+        $this->activityLogService->log(
+            'admin.nests.create',
+            auth()->user()->id,
+            'Viewed nest creation page'
+        );
+
         return $this->view->make('admin.nests.new');
     }
 
@@ -58,6 +71,12 @@ class NestController extends Controller
         $nest = $this->nestCreationService->handle($request->normalize());
         $this->alert->success(trans('admin/nests.notices.created', ['name' => htmlspecialchars($nest->name)]))->flash();
 
+        $this->activityLogService->log(
+            'admin.nests.create',
+            auth()->user()->id,
+            'Created nest ' . $nest->id
+        );
+
         return redirect()->route('admin.nests.view', $nest->id);
     }
 
@@ -68,6 +87,12 @@ class NestController extends Controller
      */
     public function view(int $nest): View
     {
+        $this->activityLogService->log(
+            'admin.nests.view',
+            auth()->user()->id,
+            'Viewed nest ' . $nest
+        );
+
         return $this->view->make('admin.nests.view', [
             'nest' => $this->repository->getWithEggServers($nest),
         ]);
@@ -84,6 +109,12 @@ class NestController extends Controller
         $this->nestUpdateService->handle($nest, $request->normalize());
         $this->alert->success(trans('admin/nests.notices.updated'))->flash();
 
+        $this->activityLogService->log(
+            'admin.nests.update',
+            auth()->user()->id,
+            'Updated nest ' . $nest
+        );
+
         return redirect()->route('admin.nests.view', $nest);
     }
 
@@ -96,6 +127,12 @@ class NestController extends Controller
     {
         $this->nestDeletionService->handle($nest);
         $this->alert->success(trans('admin/nests.notices.deleted'))->flash();
+
+        $this->activityLogService->log(
+            'admin.nests.delete',
+            auth()->user()->id,
+            'Deleted nest ' . $nest
+        );
 
         return redirect()->route('admin.nests');
     }
