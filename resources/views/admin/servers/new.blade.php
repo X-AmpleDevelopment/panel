@@ -4,307 +4,537 @@
     New Server
 @endsection
 
-@section('content-header')
-    <h1>Create Server<small>Add a new server to the panel.</small></h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ route('admin.index') }}">Admin</a></li>
-        <li><a href="{{ route('admin.servers') }}">Servers</a></li>
-        <li class="active">Create Server</li>
-    </ol>
-@endsection
-
 @section('content')
+<h1 class="text-3xl font-bold text-gray-100">
+    <div class="flex items-center space-x-4">
+        <div class="p-2 bg-accent-purple/10 rounded-lg">
+            <i class="fas fa-server text-accent-purple"></i>
+        </div>
+        <div>
+            Create New Server
+            <small class="block mt-1 text-base font-normal text-gray-400">Add a new server to our panel.</small>
+        </div>
+    </div>
+</h1>
+<br>
 <form action="{{ route('admin.servers.new') }}" method="POST">
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Core Details</h3>
-                </div>
 
-                <div class="box-body row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="pName">Server Name</label>
-                            <input type="text" class="form-control" id="pName" name="name" value="{{ old('name') }}" placeholder="Server Name">
-                            <p class="small text-muted no-margin">Character limits: <code>a-z A-Z 0-9 _ - .</code> and <code>[Space]</code>.</p>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Core Details -->
+        <div class="lg:col-span-3">
+            <div class="glass-card rounded-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-accent-purple/10 rounded-lg">
+                            <i class="fas fa-server text-accent-purple"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-100">Core Details</h3>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="pName" class="block text-sm font-medium text-gray-200 mb-2">Server Name</label>
+                            <input type="text"
+                                   id="pName"
+                                   name="name"
+                                   value="{{ old('name') }}"
+                                   class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50"
+                                   placeholder="My Cool Server" />
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Character limits: <code class="px-1.5 py-0.5 bg-background-darker rounded">a-z A-Z 0-9 _ - .</code> and <code class="px-1.5 py-0.5 bg-background-darker rounded">[Space]</code>
+                            </p>
                         </div>
 
-                        <div class="form-group">
-                            <label for="pUserId">Server Owner</label>
-                            <select id="pUserId" name="owner_id" class="form-control" style="padding-left:0;"></select>
-                            <p class="small text-muted no-margin">Email address of the Server Owner.</p>
+                        <div x-data="ownerSelect()" class="relative">
+                            <label class="block text-sm font-medium text-gray-200 mb-2">
+                                Server Owner <span class="text-red-400">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="hidden" name="owner_id" x-model="selectedId">
+                                <button type="button"
+                                        @click="isOpen = !isOpen"
+                                        class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50 flex items-center justify-between">
+                                    <div class="flex items-center space-x-3" x-show="!loading">
+                                        <template x-if="selectedUser">
+                                            <img :src="'https://www.gravatar.com/avatar/' + selectedUser.md5 + '?s=120'"
+                                                 class="h-8 w-8 rounded-full"
+                                                 alt="User Avatar">
+                                        </template>
+                                        <div class="text-left">
+                                            <div x-text="selectedUser ? selectedUser.name_first + ' ' + selectedUser.name_last : 'Select Owner'"
+                                                 class="text-gray-200"></div>
+                                            <div x-text="selectedUser ? selectedUser.email : ''"
+                                                 class="text-sm text-gray-400"></div>
+                                        </div>
+                                    </div>
+                                    <div x-show="loading" class="flex items-center space-x-2">
+                                        <i class="fas fa-circle-notch fa-spin text-gray-400"></i>
+                                        <span class="text-gray-400">Loading...</span>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-gray-400 ml-2"
+                                       :class="{ 'transform rotate-180': isOpen }"></i>
+                                </button>
+
+                                <div x-show="isOpen"
+                                     @click.away="isOpen = false"
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 translate-y-1"
+                                     x-transition:enter-end="opacity-100 translate-y-0"
+                                     x-transition:leave="transition ease-in duration-150"
+                                     x-transition:leave-start="opacity-100 translate-y-0"
+                                     x-transition:leave-end="opacity-0 translate-y-1"
+                                     class="absolute z-50 w-full mt-1 bg-background-darker border border-gray-700 rounded-lg shadow-lg">
+                                    <div class="p-2">
+                                        <input type="text"
+                                               x-model="search"
+                                               @input.debounce.300ms="searchUsers"
+                                               placeholder="Search by email..."
+                                               class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50">
+                                    </div>
+                                    <div class="max-h-60 overflow-y-auto">
+                                        <template x-for="user in users" :key="user.id">
+                                            <button type="button"
+                                                    @click="selectUser(user)"
+                                                    class="w-full px-4 py-2 flex items-center space-x-3 hover:bg-accent-purple/10 transition-colors">
+                                                <img :src="'https://www.gravatar.com/avatar/' + user.md5 + '?s=120'"
+                                                     class="h-8 w-8 rounded-full"
+                                                     alt="User Avatar">
+                                                <div class="text-left">
+                                                    <div x-text="user.name_first + ' ' + user.name_last"
+                                                         class="text-gray-200"></div>
+                                                    <div x-text="user.email"
+                                                         class="text-sm text-gray-400"></div>
+                                                </div>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Email address of the Server Owner
+                            </p>
+                        </div>
+
+                        <div>
+                            <label for="pDescription" class="block text-sm font-medium text-gray-200 mb-2">Description</label>
+                            <textarea id="pDescription"
+                                      name="description"
+                                      rows="3"
+                                      class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50">{{ old('description') }}</textarea>
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                A brief description of this server
+                            </p>
+                        </div>
+
+                        <div class="flex items-center">
+                            <label class="flex items-center mt-6">
+                                <input type="checkbox"
+                                       id="pStartOnCreation"
+                                       name="start_on_completion"
+                                       class="w-4 h-4 text-accent-purple bg-background border-gray-700 rounded focus:ring-accent-purple"
+                                       {{ \Pterodactyl\Helpers\Utilities::checked('start_on_completion', 1) }} />
+                                <span class="ml-2 text-sm text-gray-200">Start Server when Installed</span>
+                            </label>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
 
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="pDescription" class="control-label">Server Description</label>
-                            <textarea id="pDescription" name="description" rows="3" class="form-control">{{ old('description') }}</textarea>
-                            <p class="text-muted small">A brief description of this server.</p>
+        <!-- Allocation Management -->
+        <div class="lg:col-span-3">
+            <div class="glass-card rounded-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-emerald-500/10 rounded-lg">
+                            <i class="fas fa-network-wired text-emerald-500"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-100">Allocation Management</h3>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label for="pNodeId" class="block text-sm font-medium text-gray-200 mb-2">Node</label>
+                            <select name="node_id"
+                                    id="pNodeId"
+                                    class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50">
+                                @foreach($locations as $location)
+                                    <optgroup label="{{ $location->long }} ({{ $location->short }})">
+                                    @foreach($location->nodes as $node)
+                                        <option value="{{ $node->id }}"
+                                            @if($location->id === old('location_id')) selected @endif
+                                        >{{ $node->name }}</option>
+                                    @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                The node which this server will be deployed to
+                            </p>
                         </div>
 
-                        <div class="form-group">
-                            <div class="checkbox checkbox-primary no-margin-bottom">
-                                <input id="pStartOnCreation" name="start_on_completion" type="checkbox" {{ \Pterodactyl\Helpers\Utilities::checked('start_on_completion', 1) }} />
-                                <label for="pStartOnCreation" class="strong">Start Server when Installed</label>
+                        <div>
+                            <label for="pAllocation" class="block text-sm font-medium text-gray-200 mb-2">Default Port</label>
+                            <select id="pAllocation"
+                                    name="allocation_id"
+                                    class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50">
+                            </select>
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                The main allocation assigned to this server
+                            </p>
+                        </div>
+
+                        <div>
+                            <label for="pAllocationAdditional" class="block text-sm font-medium text-gray-200 mb-2">Additional Ports</label>
+                            <select id="pAllocationAdditional"
+                                    name="allocation_additional[]"
+                                    multiple
+                                    class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50 min-h-[120px]">
+                            </select>
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Additional ports to assign to this server. Hold Ctrl/Cmd to select multiple.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature Limits -->
+        <div class="lg:col-span-3">
+            <div class="glass-card rounded-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-accent-blue/10 rounded-lg">
+                            <i class="fas fa-sliders-h text-accent-blue"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-100">Feature Limits</h3>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label for="pDatabaseLimit" class="block text-sm font-medium text-gray-200 mb-2">Database Limit</label>
+                            <input type="text"
+                                   id="pDatabaseLimit"
+                                   name="database_limit"
+                                   value="{{ old('database_limit', 0) }}"
+                                   class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50" />
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Maximum number of databases
+                            </p>
+                        </div>
+
+                        <div>
+                            <label for="pAllocationLimit" class="block text-sm font-medium text-gray-200 mb-2">Allocation Limit</label>
+                            <input type="text"
+                                   id="pAllocationLimit"
+                                   name="allocation_limit"
+                                   value="{{ old('allocation_limit', 0) }}"
+                                   class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50" />
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Maximum number of allocations
+                            </p>
+                        </div>
+
+                        <div>
+                            <label for="pBackupLimit" class="block text-sm font-medium text-gray-200 mb-2">Backup Limit</label>
+                            <input type="text"
+                                   id="pBackupLimit"
+                                   name="backup_limit"
+                                   value="{{ old('backup_limit', 0) }}"
+                                   class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50" />
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Maximum number of backups
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @if(\Pterodactyl\Models\MythicaluiTheme::getValue('enable_memory_converter', 'true') === 'true')
+    <div class="mb-2 lg:col-span-3">
+        @include('admin.components.memory-calculator')
+    </div>
+    @endif
+        <!-- Resource Management -->
+        <div class="lg:col-span-3">
+            <div class="glass-card rounded-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-accent-purple/10 rounded-lg">
+                            <i class="fas fa-microchip text-accent-purple"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-100">Resource Management</h3>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- CPU -->
+                        <div>
+                            <label for="pCPU" class="block text-sm font-medium text-gray-200 mb-2">CPU Limit</label>
+                            <div class="flex rounded-lg border border-gray-700 bg-background overflow-hidden">
+                                <input type="text"
+                                       id="pCPU"
+                                       name="cpu"
+                                       value="{{ old('cpu', 0) }}"
+                                       class="flex-1 px-3 py-2 bg-background text-white focus:ring-0 border-0 outline-none" />
+                                <span class="px-3 py-2 bg-background-darker text-gray-400 border-l border-gray-700">%</span>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Set to <code class="px-1.5 py-0.5 bg-background-darker rounded">0</code> for unlimited. Each thread is <code class="px-1.5 py-0.5 bg-background-darker rounded">100%</code>
+                            </p>
+                        </div>
+
+                        <!-- CPU Pinning -->
+                        <div>
+                            <label for="pThreads" class="block text-sm font-medium text-gray-200 mb-2">CPU Pinning</label>
+                            <input type="text"
+                                   id="pThreads"
+                                   name="threads"
+                                   value="{{ old('threads') }}"
+                                   class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50" />
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                <strong>Advanced:</strong> e.g. <code class="px-1.5 py-0.5 bg-background-darker rounded">0</code>, <code class="px-1.5 py-0.5 bg-background-darker rounded">0-1,3</code>
+                            </p>
+                        </div>
+
+                        <!-- Memory -->
+                        <div>
+                            <label for="pMemory" class="block text-sm font-medium text-gray-200 mb-2">Memory</label>
+                            <div class="flex rounded-lg border border-gray-700 bg-background overflow-hidden">
+                                <input type="text"
+                                       id="pMemory"
+                                       name="memory"
+                                       value="{{ old('memory') }}"
+                                       class="flex-1 px-3 py-2 bg-background text-white focus:ring-0 border-0 outline-none" />
+                                <span class="px-3 py-2 bg-background-darker text-gray-400 border-l border-gray-700">MiB</span>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Set to <code class="px-1.5 py-0.5 bg-background-darker rounded">0</code> for unlimited memory
+                            </p>
+                        </div>
+
+                        <!-- Swap -->
+                        <div>
+                            <label for="pSwap" class="block text-sm font-medium text-gray-200 mb-2">Swap</label>
+                            <div class="flex rounded-lg border border-gray-700 bg-background overflow-hidden">
+                                <input type="text"
+                                       id="pSwap"
+                                       name="swap"
+                                       value="{{ old('swap', 0) }}"
+                                       class="flex-1 px-3 py-2 bg-background text-white focus:ring-0 border-0 outline-none" />
+                                <span class="px-3 py-2 bg-background-darker text-gray-400 border-l border-gray-700">MiB</span>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                <code class="px-1.5 py-0.5 bg-background-darker rounded">0</code> to disable, <code class="px-1.5 py-0.5 bg-background-darker rounded">-1</code> for unlimited
+                            </p>
+                        </div>
+
+                        <!-- Disk Space -->
+                        <div>
+                            <label for="pDisk" class="block text-sm font-medium text-gray-200 mb-2">Disk Space</label>
+                            <div class="flex rounded-lg border border-gray-700 bg-background overflow-hidden">
+                                <input type="text"
+                                       id="pDisk"
+                                       name="disk"
+                                       value="{{ old('disk') }}"
+                                       class="flex-1 px-3 py-2 bg-background text-white focus:ring-0 border-0 outline-none" />
+                                <span class="px-3 py-2 bg-background-darker text-gray-400 border-l border-gray-700">MiB</span>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Set to <code class="px-1.5 py-0.5 bg-background-darker rounded">0</code> for unlimited disk space
+                            </p>
+                        </div>
+
+                        <!-- Block IO -->
+                        <div>
+                            <label for="pIO" class="block text-sm font-medium text-gray-200 mb-2">Block IO Weight</label>
+                            <input type="text"
+                                   id="pIO"
+                                   name="io"
+                                   value="{{ old('io', 500) }}"
+                                   class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50" />
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                <strong>Advanced:</strong> Value between <code class="px-1.5 py-0.5 bg-background-darker rounded">10-1000</code>
+                            </p>
+                        </div>
+
+                        <!-- OOM Killer -->
+                        <div class="md:col-span-2">
+                            <label class="flex items-center space-x-3">
+                                <input type="checkbox"
+                                       id="pOomDisabled"
+                                       name="oom_disabled"
+                                       value="0"
+                                       {{ \Pterodactyl\Helpers\Utilities::checked('oom_disabled', 0) }}
+                                       class="w-4 h-4 text-accent-purple bg-background border-gray-700 rounded focus:ring-accent-purple" />
+                                <span class="text-sm text-gray-200">Enable OOM Killer</span>
+                            </label>
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Terminates the server if it breaches memory limits
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nest & Docker Configuration -->
+        <div class="lg:col-span-3">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Nest Configuration -->
+                <div>
+                    <div class="glass-card rounded-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-700">
+                            <div class="flex items-center space-x-3">
+                                <div class="p-2 bg-accent-blue/10 rounded-lg">
+                                    <i class="fas fa-folder text-accent-blue"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-100">Nest Configuration</h3>
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            <div>
+                                <label for="pNestId" class="block text-sm font-medium text-gray-200 mb-2">Nest</label>
+                                <select id="pNestId"
+                                        name="nest_id"
+                                        class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50">
+                                    @foreach($nests as $nest)
+                                        <option value="{{ $nest->id }}"
+                                            @if($nest->id === old('nest_id')) selected @endif
+                                        >{{ $nest->name }}</option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 text-xs text-gray-400">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Select the Nest for this server
+                                </p>
+                            </div>
+
+                            <div>
+                                <label for="pEggId" class="block text-sm font-medium text-gray-200 mb-2">Egg</label>
+                                <select id="pEggId"
+                                        name="egg_id"
+                                        class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50">
+                                </select>
+                                <p class="mt-1 text-xs text-gray-400">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Select the Egg for this server
+                                </p>
+                            </div>
+
+                            <div>
+                                <label class="flex items-center space-x-3">
+                                    <input type="checkbox"
+                                           id="pSkipScripting"
+                                           name="skip_scripts"
+                                           value="1"
+                                           {{ \Pterodactyl\Helpers\Utilities::checked('skip_scripts', 0) }}
+                                           class="w-4 h-4 text-accent-purple bg-background border-gray-700 rounded focus:ring-accent-purple" />
+                                    <span class="text-sm text-gray-200">Skip Egg Install Script</span>
+                                </label>
+                                <p class="mt-1 text-xs text-gray-400">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Skip running the Egg's install script
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Docker Configuration -->
+                <div>
+                    <div class="glass-card rounded-lg overflow-hidden">
+                        <div class="p-6 border-b border-gray-700">
+                            <div class="flex items-center space-x-3">
+                                <div class="p-2 bg-accent-blue/10 rounded-lg">
+                                    <i class="fab fa-docker text-accent-blue"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-100">Docker Configuration</h3>
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            <div>
+                                <label for="pDefaultContainer" class="block text-sm font-medium text-gray-200 mb-2">Docker Image</label>
+                                <select id="pDefaultContainer"
+                                        name="image"
+                                        class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50">
+                                </select>
+                                <input type="text"
+                                       id="pDefaultContainerCustom"
+                                       name="custom_image"
+                                       value="{{ old('custom_image') }}"
+                                       placeholder="Or enter a custom image..."
+                                       class="mt-2 w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50" />
+                                <p class="mt-1 text-xs text-gray-400">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Select a predefined image or enter a custom one
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="overlay" id="allocationLoader" style="display:none;"><i class="fa fa-refresh fa-spin"></i></div>
-                <div class="box-header with-border">
-                    <h3 class="box-title">Allocation Management</h3>
-                </div>
-
-                <div class="box-body row">
-                    <div class="form-group col-sm-4">
-                        <label for="pNodeId">Node</label>
-                        <select name="node_id" id="pNodeId" class="form-control">
-                            @foreach($locations as $location)
-                                <optgroup label="{{ $location->long }} ({{ $location->short }})">
-                                @foreach($location->nodes as $node)
-
-                                <option value="{{ $node->id }}"
-                                    @if($location->id === old('location_id')) selected @endif
-                                >{{ $node->name }}</option>
-
-                                @endforeach
-                                </optgroup>
-                            @endforeach
-                        </select>
-
-                        <p class="small text-muted no-margin">The node which this server will be deployed to.</p>
-                    </div>
-
-                    <div class="form-group col-sm-4">
-                        <label for="pAllocation">Default Allocation</label>
-                        <select id="pAllocation" name="allocation_id" class="form-control"></select>
-                        <p class="small text-muted no-margin">The main allocation that will be assigned to this server.</p>
-                    </div>
-
-                    <div class="form-group col-sm-4">
-                        <label for="pAllocationAdditional">Additional Allocation(s)</label>
-                        <select id="pAllocationAdditional" name="allocation_additional[]" class="form-control" multiple></select>
-                        <p class="small text-muted no-margin">Additional allocations to assign to this server on creation.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="overlay" id="allocationLoader" style="display:none;"><i class="fa fa-refresh fa-spin"></i></div>
-                <div class="box-header with-border">
-                    <h3 class="box-title">Application Feature Limits</h3>
-                </div>
-
-                <div class="box-body row">
-                    <div class="form-group col-xs-6">
-                        <label for="pDatabaseLimit" class="control-label">Database Limit</label>
-                        <div>
-                            <input type="text" id="pDatabaseLimit" name="database_limit" class="form-control" value="{{ old('database_limit', 0) }}"/>
+        <!-- Startup Configuration -->
+        <div class="lg:col-span-3">
+            <div class="glass-card rounded-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-700">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-accent-purple/10 rounded-lg">
+                            <i class="fas fa-terminal text-accent-purple"></i>
                         </div>
-                        <p class="text-muted small">The total number of databases a user is allowed to create for this server.</p>
-                    </div>
-                    <div class="form-group col-xs-6">
-                        <label for="pAllocationLimit" class="control-label">Allocation Limit</label>
-                        <div>
-                            <input type="text" id="pAllocationLimit" name="allocation_limit" class="form-control" value="{{ old('allocation_limit', 0) }}"/>
-                        </div>
-                        <p class="text-muted small">The total number of allocations a user is allowed to create for this server.</p>
-                    </div>
-                    <div class="form-group col-xs-6">
-                        <label for="pBackupLimit" class="control-label">Backup Limit</label>
-                        <div>
-                            <input type="text" id="pBackupLimit" name="backup_limit" class="form-control" value="{{ old('backup_limit', 0) }}"/>
-                        </div>
-                        <p class="text-muted small">The total number of backups that can be created for this server.</p>
+                        <h3 class="text-xl font-semibold text-gray-100">Startup Configuration</h3>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Resource Management</h3>
-                </div>
-
-                <div class="box-body row">
-                    <div class="form-group col-xs-6">
-                        <label for="pCPU">CPU Limit</label>
-
-                        <div class="input-group">
-                            <input type="text" id="pCPU" name="cpu" class="form-control" value="{{ old('cpu', 0) }}" />
-                            <span class="input-group-addon">%</span>
-                        </div>
-
-                        <p class="text-muted small">If you do not want to limit CPU usage, set the value to <code>0</code>. To determine a value, take the number of threads and multiply it by 100. For example, on a quad core system without hyperthreading <code>(4 * 100 = 400)</code> there is <code>400%</code> available. To limit a server to using half of a single thread, you would set the value to <code>50</code>. To allow a server to use up to two threads, set the value to <code>200</code>.<p>
+                <div class="p-6 space-y-6">
+                    <div>
+                        <label for="pStartup" class="block text-sm font-medium text-gray-200 mb-2">Startup Command</label>
+                        <input type="text"
+                               id="pStartup"
+                               name="startup"
+                               value="{{ old('startup') }}"
+                               class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50" />
+                        <p class="mt-1 text-xs text-gray-400">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Available variables: <code class="px-1.5 py-0.5 bg-background-darker rounded">@{{SERVER_MEMORY}}</code>,
+                            <code class="px-1.5 py-0.5 bg-background-darker rounded">@{{SERVER_IP}}</code>,
+                            <code class="px-1.5 py-0.5 bg-background-darker rounded">@{{SERVER_PORT}}</code>
+                        </p>
                     </div>
 
-                    <div class="form-group col-xs-6">
-                        <label for="pThreads">CPU Pinning</label>
-
-                        <div>
-                            <input type="text" id="pThreads" name="threads" class="form-control" value="{{ old('threads') }}" />
-                        </div>
-
-                        <p class="text-muted small"><strong>Advanced:</strong> Enter the specific CPU threads that this process can run on, or leave blank to allow all threads. This can be a single number, or a comma separated list. Example: <code>0</code>, <code>0-1,3</code>, or <code>0,1,3,4</code>.</p>
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-200 mb-4">Service Variables</h3>
+                        <div id="appendVariablesTo" class="space-y-4"></div>
                     </div>
                 </div>
 
-                <div class="box-body row">
-                    <div class="form-group col-xs-6">
-                        <label for="pMemory">Memory</label>
-
-                        <div class="input-group">
-                            <input type="text" id="pMemory" name="memory" class="form-control" value="{{ old('memory') }}" />
-                            <span class="input-group-addon">MiB</span>
-                        </div>
-
-                        <p class="text-muted small">The maximum amount of memory allowed for this container. Setting this to <code>0</code> will allow unlimited memory in a container.</p>
-                    </div>
-
-                    <div class="form-group col-xs-6">
-                        <label for="pSwap">Swap</label>
-
-                        <div class="input-group">
-                            <input type="text" id="pSwap" name="swap" class="form-control" value="{{ old('swap', 0) }}" />
-                            <span class="input-group-addon">MiB</span>
-                        </div>
-
-                        <p class="text-muted small">Setting this to <code>0</code> will disable swap space on this server. Setting to <code>-1</code> will allow unlimited swap.</p>
-                    </div>
-                </div>
-
-                <div class="box-body row">
-                    <div class="form-group col-xs-6">
-                        <label for="pDisk">Disk Space</label>
-
-                        <div class="input-group">
-                            <input type="text" id="pDisk" name="disk" class="form-control" value="{{ old('disk') }}" />
-                            <span class="input-group-addon">MiB</span>
-                        </div>
-
-                        <p class="text-muted small">This server will not be allowed to boot if it is using more than this amount of space. If a server goes over this limit while running it will be safely stopped and locked until enough space is available. Set to <code>0</code> to allow unlimited disk usage.</p>
-                    </div>
-
-                    <div class="form-group col-xs-6">
-                        <label for="pIO">Block IO Weight</label>
-
-                        <div>
-                            <input type="text" id="pIO" name="io" class="form-control" value="{{ old('io', 500) }}" />
-                        </div>
-
-                        <p class="text-muted small"><strong>Advanced</strong>: The IO performance of this server relative to other <em>running</em> containers on the system. Value should be between <code>10</code> and <code>1000</code>. Please see <a href="https://docs.docker.com/engine/reference/run/#block-io-bandwidth-blkio-constraint" target="_blank">this documentation</a> for more information about it.</p>
-                    </div>
-                    <div class="form-group col-xs-12">
-                        <div class="checkbox checkbox-primary no-margin-bottom">
-                            <input type="checkbox" id="pOomDisabled" name="oom_disabled" value="0" {{ \Pterodactyl\Helpers\Utilities::checked('oom_disabled', 0) }} />
-                            <label for="pOomDisabled" class="strong">Enable OOM Killer</label>
-                        </div>
-
-                        <p class="small text-muted no-margin">Terminates the server if it breaches the memory limits. Enabling OOM killer may cause server processes to exit unexpectedly.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6">
-            <div class="box">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Nest Configuration</h3>
-                </div>
-
-                <div class="box-body row">
-                    <div class="form-group col-xs-12">
-                        <label for="pNestId">Nest</label>
-
-                        <select id="pNestId" name="nest_id" class="form-control">
-                            @foreach($nests as $nest)
-                                <option value="{{ $nest->id }}"
-                                    @if($nest->id === old('nest_id'))
-                                        selected="selected"
-                                    @endif
-                                >{{ $nest->name }}</option>
-                            @endforeach
-                        </select>
-
-                        <p class="small text-muted no-margin">Select the Nest that this server will be grouped under.</p>
-                    </div>
-
-                    <div class="form-group col-xs-12">
-                        <label for="pEggId">Egg</label>
-                        <select id="pEggId" name="egg_id" class="form-control"></select>
-                        <p class="small text-muted no-margin">Select the Egg that will define how this server should operate.</p>
-                    </div>
-                    <div class="form-group col-xs-12">
-                        <div class="checkbox checkbox-primary no-margin-bottom">
-                            <input type="checkbox" id="pSkipScripting" name="skip_scripts" value="1" {{ \Pterodactyl\Helpers\Utilities::checked('skip_scripts', 0) }} />
-                            <label for="pSkipScripting" class="strong">Skip Egg Install Script</label>
-                        </div>
-
-                        <p class="small text-muted no-margin">If the selected Egg has an install script attached to it, the script will run during the install. If you would like to skip this step, check this box.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="box">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Docker Configuration</h3>
-                </div>
-
-                <div class="box-body row">
-                    <div class="form-group col-xs-12">
-                        <label for="pDefaultContainer">Docker Image</label>
-                        <select id="pDefaultContainer" name="image" class="form-control"></select>
-                        <input id="pDefaultContainerCustom" name="custom_image" value="{{ old('custom_image') }}" class="form-control" placeholder="Or enter a custom image..." style="margin-top:1rem"/>
-                        <p class="small text-muted no-margin">This is the default Docker image that will be used to run this server. Select an image from the dropdown above, or enter a custom image in the text field above.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-12">
-            <div class="box">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Startup Configuration</h3>
-                </div>
-
-                <div class="box-body row">
-                    <div class="form-group col-xs-12">
-                        <label for="pStartup">Startup Command</label>
-                        <input type="text" id="pStartup" name="startup" value="{{ old('startup') }}" class="form-control" />
-                        <p class="small text-muted no-margin">The following data substitutes are available for the startup command: <code>@{{SERVER_MEMORY}}</code>, <code>@{{SERVER_IP}}</code>, and <code>@{{SERVER_PORT}}</code>. They will be replaced with the allocated memory, server IP, and server port respectively.</p>
-                    </div>
-                </div>
-
-                <div class="box-header with-border" style="margin-top:-10px;">
-                    <h3 class="box-title">Service Variables</h3>
-                </div>
-
-                <div class="box-body row" id="appendVariablesTo"></div>
-
-                <div class="box-footer">
+                <div class="px-6 py-4 bg-background-darker/50 flex justify-end">
                     {!! csrf_field() !!}
-                    <input type="submit" class="btn btn-success pull-right" value="Create Server" />
+                    <button type="submit" class="px-4 py-2 bg-accent-purple text-white rounded-lg hover:bg-accent-purple/80 transition-colors">
+                        <i class="fas fa-save mr-2"></i>
+                        Create Server
+                    </button>
                 </div>
             </div>
         </div>
@@ -316,45 +546,39 @@
     @parent
     {!! Theme::js('vendor/lodash/lodash.js') !!}
 
-    <script type="application/javascript">
-        // Persist 'Service Variables'
-        function serviceVariablesUpdated(eggId, ids) {
-            @if (old('egg_id'))
-                // Check if the egg id matches.
-                if (eggId != '{{ old('egg_id') }}') {
-                    return;
+    <script>
+        function ownerSelect() {
+            return {
+                isOpen: false,
+                loading: false,
+                search: '',
+                users: [],
+                selectedId: '',
+                selectedUser: null,
+                async searchUsers() {
+                    if (this.search.length < 2) return;
+
+                    this.loading = true;
+                    try {
+                        const response = await fetch(`/admin/users/accounts.json?filter[email]=${this.search}`);
+                        const data = await response.json();
+                        this.users = data;
+                    } catch (error) {
+                        console.error('Error fetching users:', error);
+                    }
+                    this.loading = false;
+                },
+                selectUser(user) {
+                    this.selectedUser = user;
+                    this.selectedId = user.id;
+                    this.isOpen = false;
                 }
-
-                @if (old('environment'))
-                    @foreach (old('environment') as $key => $value)
-                        $('#' + ids['{{ $key }}']).val('{{ $value }}');
-                    @endforeach
-                @endif
-            @endif
-            @if(old('image'))
-                $('#pDefaultContainer').val('{{ old('image') }}');
-            @endif
+            }
         }
-        // END Persist 'Service Variables'
+
     </script>
-
-    {!! Theme::js('js/admin/new-server.js?v=20220530') !!}
-
-    <script type="application/javascript">
+ <script type="application/javascript">
         $(document).ready(function() {
-            // Persist 'Server Owner' select2
-            @if (old('owner_id'))
-                $.ajax({
-                    url: '/admin/users/accounts.json?user_id={{ old('owner_id') }}',
-                    dataType: 'json',
-                }).then(function (data) {
-                    initUserIdSelect([ data ]);
-                });
-            @else
-                initUserIdSelect();
-            @endif
-            // END Persist 'Server Owner' select2
-
             // Persist 'Node' select2
             @if (old('node_id'))
                 $('#pNodeId').val('{{ old('node_id') }}').change();
@@ -392,4 +616,211 @@
             // END Persist 'Nest' select2
         });
     </script>
+        <script type="application/javascript">
+        // Persist 'Service Variables'
+        function serviceVariablesUpdated(eggId, ids) {
+            @if (old('egg_id'))
+                // Check if the egg id matches.
+                if (eggId != '{{ old('egg_id') }}') {
+                    return;
+                }
+
+                @if (old('environment'))
+                    @foreach (old('environment') as $key => $value)
+                        $('#' + ids['{{ $key }}']).val('{{ $value }}');
+                    @endforeach
+                @endif
+            @endif
+            @if(old('image'))
+                $('#pDefaultContainer').val('{{ old('image') }}');
+            @endif
+        }
+        // END Persist 'Service Variables'
+        $(document).ready(function() {
+    $('#pNestId').select2({
+        placeholder: 'Select a Nest',
+    }).change();
+
+    $('#pEggId').select2({
+        placeholder: 'Select a Nest Egg',
+    });
+
+    $('#pPackId').select2({
+        placeholder: 'Select a Service Pack',
+    });
+
+    $('#pNodeId').select2({
+        placeholder: 'Select a Node',
+    }).change();
+
+    $('#pAllocation').select2({
+        placeholder: 'Select a Default Allocation',
+    });
+
+    $('#pAllocationAdditional').select2({
+        placeholder: 'Select Additional Allocations',
+    });
+});
+
+let lastActiveBox = null;
+$(document).on('click', function (event) {
+    if (lastActiveBox !== null) {
+        lastActiveBox.removeClass('box-primary');
+    }
+
+    lastActiveBox = $(event.target).closest('.box');
+    lastActiveBox.addClass('box-primary');
+});
+
+$('#pNodeId').on('change', function () {
+    currentNode = $(this).val();
+    $.each(Pterodactyl.nodeData, function (i, v) {
+        if (v.id == currentNode) {
+            $('#pAllocation').html('').select2({
+                data: v.allocations,
+                placeholder: 'Select a Default Allocation',
+            });
+
+            updateAdditionalAllocations();
+        }
+    });
+});
+
+$('#pNestId').on('change', function (event) {
+    $('#pEggId').html('').select2({
+        data: $.map(_.get(Pterodactyl.nests, $(this).val() + '.eggs', []), function (item) {
+            return {
+                id: item.id,
+                text: item.name,
+            };
+        }),
+    }).change();
+});
+
+$('#pEggId').on('change', function (event) {
+    let parentChain = _.get(Pterodactyl.nests, $('#pNestId').val(), null);
+    let objectChain = _.get(parentChain, 'eggs.' + $(this).val(), null);
+
+    const images = _.get(objectChain, 'docker_images', {})
+    $('#pDefaultContainer').html('');
+    const keys = Object.keys(images);
+    for (let i = 0; i < keys.length; i++) {
+        let opt = document.createElement('option');
+        opt.value = images[keys[i]];
+        opt.innerText = keys[i] + " (" + images[keys[i]] + ")";
+        $('#pDefaultContainer').append(opt);
+    }
+
+    if (!_.get(objectChain, 'startup', false)) {
+        $('#pStartup').val(_.get(parentChain, 'startup', 'ERROR: Startup Not Defined!'));
+    } else {
+        $('#pStartup').val(_.get(objectChain, 'startup'));
+    }
+
+    $('#pPackId').html('').select2({
+        data: [{ id: 0, text: 'No Service Pack' }].concat(
+            $.map(_.get(objectChain, 'packs', []), function (item, i) {
+                return {
+                    id: item.id,
+                    text: item.name + ' (' + item.version + ')',
+                };
+            })
+        ),
+    });
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    const variableIds = {};
+    $('#appendVariablesTo').html('');
+    $.each(_.get(objectChain, 'variables', []), function (i, item) {
+        variableIds[item.env_variable] = 'var_ref_' + item.id;
+
+        let isRequired = (item.required === 1) ? '<span class="px-1.5 py-0.5 bg-red-500/10 text-red-400 text-xs rounded-lg">Required</span>' : '';
+        let dataAppend = `
+            <div class="glass-card rounded-lg overflow-hidden">
+                <div class="p-4 border-b border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-cog text-accent-purple"></i>
+                            <label for="var_ref_${escapeHtml(item.id)}" class="text-sm font-medium text-gray-200">
+                                ${escapeHtml(item.name)}
+                            </label>
+                        </div>
+                        ${isRequired}
+                    </div>
+                </div>
+                <div class="p-4 space-y-3">
+                    <input type="text"
+                           id="var_ref_${escapeHtml(item.id)}"
+                           name="environment[${escapeHtml(item.env_variable)}]"
+                           value="${escapeHtml(item.default_value)}"
+                           class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50"
+                           autocomplete="off" />
+
+                    <div class="text-xs text-gray-400">
+                        <p>${escapeHtml(item.description)}</p>
+
+                        <div class="mt-2 flex items-center space-x-4">
+                            <div>
+                                <span class="font-medium">Variable:</span>
+                                <code class="ml-1">${escapeHtml(item.env_variable)}</code>
+                            </div>
+                            <div>
+                                <span class="font-medium">Rules:</span>
+                                <code class="ml-1 px-1.5 py-0.5 bg-background-darker rounded">${escapeHtml(item.rules)}</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        $('#appendVariablesTo').append(dataAppend);
+    });
+
+    serviceVariablesUpdated($('#pEggId').val(), variableIds);
+});
+
+$('#pAllocation').on('change', function () {
+    updateAdditionalAllocations();
+});
+
+function updateAdditionalAllocations() {
+    let currentAllocation = $('#pAllocation').val();
+    let currentNode = $('#pNodeId').val();
+
+    $.each(Pterodactyl.nodeData, function (i, v) {
+        if (v.id == currentNode) {
+            let allocations = [];
+
+            for (let i = 0; i < v.allocations.length; i++) {
+                const allocation = v.allocations[i];
+
+                if (allocation.id != currentAllocation) {
+                    allocations.push(allocation);
+                }
+            }
+
+            $('#pAllocationAdditional').html('').select2({
+                data: allocations,
+                placeholder: 'Select Additional Allocations',
+            });
+        }
+    });
+}
+</script>
+
+
+<style>
+        .glass-card {
+            @apply bg-background-darker bg-opacity-50 backdrop-blur-sm;
+        }
+
+        #appendVariablesTo {
+            @apply grid grid-cols-1 md:grid-cols-2 gap-6;
+        }
+    </style>
 @endsection

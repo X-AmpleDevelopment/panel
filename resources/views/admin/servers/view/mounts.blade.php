@@ -17,62 +17,102 @@
 @section('content')
     @include('admin.servers.partials.navigation')
 
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Available Mounts</h3>
-                </div>
-
-                <div class="box-body table-responsible no-padding">
-                    <table class="table table-hover">
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Source</th>
-                            <th>Target</th>
-                            <th>Status</th>
-                            <th></th>
-                        </tr>
-
-                        @foreach ($mounts as $mount)
-                            <tr>
-                                <td class="col-sm-1 middle"><code>{{ $mount->id }}</code></td>
-                                <td class="middle"><a href="{{ route('admin.mounts.view', $mount->id) }}">{{ $mount->name }}</a></td>
-                                <td class="middle"><code>{{ $mount->source }}</code></td>
-                                <td class="col-sm-2 middle"><code>{{ $mount->target }}</code></td>
-
-                                @if (! in_array($mount->id, $server->mounts->pluck('id')->toArray()))
-                                    <td class="col-sm-2 middle">
-                                        <span class="label label-primary">Unmounted</span>
-                                    </td>
-
-                                    <td class="col-sm-1 middle">
-                                        <form action="{{ route('admin.servers.view.mounts.store', [ 'server' => $server->id ]) }}" method="POST">
-                                            {!! csrf_field() !!}
-                                            <input type="hidden" value="{{ $mount->id }}" name="mount_id" />
-                                            <button type="submit" class="btn btn-xs btn-success"><i class="fa fa-plus"></i></button>
-                                        </form>
-                                    </td>
-                                @else
-                                    <td class="col-sm-2 middle">
-                                        <span class="label label-success">Mounted</span>
-                                    </td>
-
-                                    <td class="col-sm-1 middle">
-                                        <form action="{{ route('admin.servers.view.mounts.delete', [ 'server' => $server->id, 'mount' => $mount->id ]) }}" method="POST">
-                                            @method('DELETE')
-                                            {!! csrf_field() !!}
-
-                                            <button type="submit" class="btn btn-xs btn-danger"><i class="fa fa-times"></i></button>
-                                        </form>
-                                    </td>
-                                @endif
-                            </tr>
-                        @endforeach
-                    </table>
+    <div class="glass-card rounded-lg overflow-hidden">
+        <div class="p-6 border-b border-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-accent-purple/10 rounded-lg">
+                        <i class="fas fa-hdd text-accent-purple"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-100">Available Mounts</h3>
                 </div>
             </div>
         </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-background-darker bg-opacity-50">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">Source</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">Target</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-200 uppercase tracking-wider w-20">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700/50">
+                    @foreach ($mounts as $mount)
+                        <tr class="hover:bg-background-darker/50 transition-colors">
+                            <td class="px-6 py-4">
+                                <code class="px-2 py-1 bg-background rounded text-gray-400 text-sm">{{ $mount->id }}</code>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="p-2 bg-accent-purple/10 rounded-lg">
+                                        <i class="fas fa-hdd text-accent-purple"></i>
+                                    </div>
+                                    <div>
+                                        <a href="{{ route('admin.mounts.view', $mount->id) }}"
+                                           class="text-gray-100 hover:text-accent-purple transition-colors font-medium">
+                                            {{ $mount->name }}
+                                        </a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <code class="px-2 py-1 bg-background rounded text-gray-400 text-sm">{{ $mount->source }}</code>
+                            </td>
+                            <td class="px-6 py-4">
+                                <code class="px-2 py-1 bg-background rounded text-gray-400 text-sm">{{ $mount->target }}</code>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if (! in_array($mount->id, $server->mounts->pluck('id')->toArray()))
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent-blue/10 text-accent-blue">
+                                        <i class="fas fa-times-circle mr-1"></i>
+                                        Unmounted
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-500">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        Mounted
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex justify-center">
+                                    @if (! in_array($mount->id, $server->mounts->pluck('id')->toArray()))
+                                        <form action="{{ route('admin.servers.view.mounts.store', [ 'server' => $server->id ]) }}" method="POST">
+                                            {!! csrf_field() !!}
+                                            <input type="hidden" value="{{ $mount->id }}" name="mount_id" />
+                                            <button type="submit" class="px-2 py-1 bg-emerald-500 text-white rounded hover:bg-emerald-600 transition-colors">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </form>
+                                    @else
+                                        <form action="{{ route('admin.servers.view.mounts.delete', [ 'server' => $server->id, 'mount' => $mount->id ]) }}" method="POST">
+                                            @method('DELETE')
+                                            {!! csrf_field() !!}
+                                            <button type="submit" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
+@endsection
+
+@section('footer-scripts')
+    @parent
+    <style>
+        .glass-card {
+            @apply bg-background-darker bg-opacity-50 backdrop-blur-sm;
+        }
+    </style>
 @endsection

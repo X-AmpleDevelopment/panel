@@ -4,78 +4,202 @@
     Locations
 @endsection
 
-@section('content-header')
-    <h1>Locations<small>All locations that nodes can be assigned to for easier categorization.</small></h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ route('admin.index') }}">Admin</a></li>
-        <li class="active">Locations</li>
-    </ol>
-@endsection
-
 @section('content')
-<div class="row">
-    <div class="col-xs-12">
-        <div class="box box-primary">
-            <div class="box-header with-border">
-                <h3 class="box-title">Location List</h3>
-                <div class="box-tools">
-                    <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#newLocationModal">Create New</button>
-                </div>
+    
+
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-100">
+                    <div class="flex items-center space-x-4">
+                        <div class="p-2 bg-accent-purple/10 rounded-lg">
+                            <i class="fas fa-map-marker-alt text-accent-purple"></i>
+                        </div>
+                        <div>
+                            Locations
+                            <small class="block mt-1 text-base font-normal text-gray-400">All locations that nodes can be assigned to for easier categorization.</small>
+                        </div>
+                    </div>
+                </h1>
             </div>
-            <div class="box-body table-responsive no-padding">
-                <table class="table table-hover">
-                    <tbody>
-                        <tr>
-                            <th>ID</th>
-                            <th>Short Code</th>
-                            <th>Description</th>
-                            <th class="text-center">Nodes</th>
-                            <th class="text-center">Servers</th>
-                        </tr>
-                        @foreach ($locations as $location)
-                            <tr>
-                                <td><code>{{ $location->id }}</code></td>
-                                <td><a href="{{ route('admin.locations.view', $location->id) }}">{{ $location->short }}</a></td>
-                                <td>{{ $location->long }}</td>
-                                <td class="text-center">{{ $location->nodes_count }}</td>
-                                <td class="text-center">{{ $location->servers_count }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+            <div class="flex items-center space-x-3">
+                <button type="button"
+                        onclick="toggleView()"
+                        class="px-4 py-2 bg-accent-purple text-white rounded-lg hover:bg-accent-purple/80 transition-all duration-300 group"
+                        id="toggle-button">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Create New
+                </button>
             </div>
         </div>
     </div>
-</div>
-<div class="modal fade" id="newLocationModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <form action="{{ route('admin.locations') }}" method="POST">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title">Create Location</h4>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <label for="pShortModal" class="form-label">Short Code</label>
-                            <input type="text" name="short" id="pShortModal" class="form-control" />
-                            <p class="text-muted small">A short identifier used to distinguish this location from others. Must be between 1 and 60 characters, for example, <code>us.nyc.lvl3</code>.</p>
-                        </div>
-                        <div class="col-md-12">
-                            <label for="pLongModal" class="form-label">Description</label>
-                            <textarea name="long" id="pLongModal" class="form-control" rows="4"></textarea>
-                            <p class="text-muted small">A longer description of this location. Must be less than 191 characters.</p>
+
+    <!-- List View -->
+    <div id="list-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach ($locations as $location)
+            <div class="glass-card rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-accent-purple/10">
+                <div class="p-5 border-b border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <a href="{{ route('admin.locations.view', $location->id) }}"
+                           class="text-lg font-medium text-gray-100 hover:text-accent-purple transition-colors">
+                            {{ $location->short }}
+                        </a>
+                        <div class="p-2 bg-accent-purple/10 rounded-lg">
+                            <i class="fas fa-map-marker-alt text-accent-purple"></i>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    {!! csrf_field() !!}
-                    <button type="button" class="btn btn-default btn-sm pull-left" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success btn-sm">Create</button>
+                <div class="p-5">
+                    <p class="text-gray-400 text-sm mb-4">{{ $location->long }}</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-background/50 rounded-lg p-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-400">Nodes</span>
+                                <span class="text-sm font-semibold text-gray-200">
+                                    <i class="fas fa-server text-accent-purple mr-2"></i>
+                                    {{ $location->nodes_count }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="bg-background/50 rounded-lg p-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-400">Servers</span>
+                                <span class="text-sm font-semibold text-gray-200">
+                                    <i class="fas fa-cube text-accent-blue mr-2"></i>
+                                    {{ $location->servers_count }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </form>
+                <div class="px-5 pb-5">
+                    <a href="{{ route('admin.locations.view', $location->id) }}"
+                       class="block w-full px-4 py-2 bg-accent-purple/10 text-accent-purple text-center rounded-lg hover:bg-accent-purple/20 transition-colors">
+                        Manage Location
+                    </a>
+                </div>
+            </div>
+        @endforeach
+    </div>
+
+    <!-- Create Form View -->
+    <div id="create-view" class="hidden transition-all duration-300 transform translate-y-4 opacity-0">
+        <div class="glass-card rounded-lg overflow-hidden">
+            <div class="p-5 border-b border-gray-700">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-semibold gradient-text">Create New Location</h3>
+                    <div class="p-2 bg-accent-purple/10 rounded-lg">
+                        <i class="fas fa-map-marker-alt text-accent-purple"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5">
+                <form action="{{ route('admin.locations') }}" method="POST">
+                    <div class="space-y-6">
+                        <div>
+                            <label for="pShortModal" class="block text-sm font-medium text-gray-200">Short Code</label>
+                            <div class="relative mt-1">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-map-marker-alt text-gray-400"></i>
+                                </div>
+                                <input type="text"
+                                       id="pShortModal"
+                                       name="short"
+                                       required
+                                       placeholder="us.nyc.lvl3"
+                                       class="w-full pl-10 px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50" />
+                            </div>
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                A unique identifier for this location (e.g. <code class="px-1.5 py-0.5 bg-background-darker rounded">us.nyc.lvl3</code>).
+                            </p>
+                        </div>
+
+                        <div>
+                            <label for="pLongModal" class="block text-sm font-medium text-gray-200">Description</label>
+                            <div class="relative mt-1">
+                                <textarea id="pLongModal"
+                                          name="long"
+                                          required
+                                          rows="3"
+                                          placeholder="A detailed description of this location..."
+                                          class="w-full px-3 py-2 bg-background text-white rounded-lg border border-gray-700 focus:border-accent-purple focus:ring focus:ring-accent-purple focus:ring-opacity-50"></textarea>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-400">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Provide a clear description to help identify this location.
+                            </p>
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            {!! csrf_field() !!}
+                            <button type="button"
+                                    onclick="toggleView()"
+                                    class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                    class="px-4 py-2 bg-accent-purple text-white rounded-lg hover:bg-accent-purple/80 transition-colors">
+                                <i class="fas fa-plus-circle mr-2"></i>
+                                Create Location
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
+@endsection
+
+@section('footer-scripts')
+    @parent
+    <script>
+        function toggleView() {
+            const listView = document.getElementById('list-view');
+            const createView = document.getElementById('create-view');
+            const toggleButton = document.getElementById('toggle-button');
+
+            if (listView.classList.contains('hidden')) {
+                // Switch to List View
+                createView.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => {
+                    createView.classList.add('hidden');
+                    listView.classList.remove('hidden');
+                    setTimeout(() => {
+                        listView.classList.remove('opacity-0', 'translate-y-4');
+                    }, 50);
+                }, 300);
+
+                // Update button
+                toggleButton.innerHTML = '<i class="fas fa-plus-circle mr-2"></i>Create New';
+                toggleButton.classList.remove('bg-gray-500', 'hover:bg-gray-600');
+                toggleButton.classList.add('bg-accent-purple', 'hover:bg-accent-purple/80');
+            } else {
+                // Switch to Create View
+                listView.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => {
+                    listView.classList.add('hidden');
+                    createView.classList.remove('hidden');
+                    setTimeout(() => {
+                        createView.classList.remove('opacity-0', 'translate-y-4');
+                    }, 50);
+                }, 300);
+
+                // Update button
+                toggleButton.innerHTML = '<i class="fas fa-arrow-left mr-2"></i>Back to List';
+                toggleButton.classList.remove('bg-accent-purple', 'hover:bg-accent-purple/80');
+                toggleButton.classList.add('bg-gray-500', 'hover:bg-gray-600');
+            }
+        }
+    </script>
+
+    <style>
+        .glass-card {
+            @apply bg-background-darker bg-opacity-50 backdrop-blur-sm;
+        }
+
+        .gradient-text {
+            @apply bg-clip-text text-transparent bg-gradient-to-r from-accent-purple to-accent-blue;
+        }
+    </style>
 @endsection

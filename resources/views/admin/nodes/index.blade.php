@@ -1,107 +1,177 @@
 @extends('layouts.admin')
 
 @section('title')
-    List Nodes
+Nodes
 @endsection
 
 @section('scripts')
-    @parent
-    {!! Theme::css('vendor/fontawesome/animation.min.css') !!}
+@parent
+{!! Theme::css('vendor/fontawesome/animation.min.css') !!}
 @endsection
 
-@section('content-header')
-    <h1>Nodes<small>All nodes available on the system.</small></h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ route('admin.index') }}">Admin</a></li>
-        <li class="active">Nodes</li>
-    </ol>
-@endsection
 
 @section('content')
-<div class="row">
-    <div class="col-xs-12">
-        <div class="box box-primary">
-            <div class="box-header with-border">
-                <h3 class="box-title">Node List</h3>
-                <div class="box-tools search01">
-                    <form action="{{ route('admin.nodes') }}" method="GET">
-                        <div class="input-group input-group-sm">
-                            <input type="text" name="filter[name]" class="form-control pull-right" value="{{ request()->input('filter.name') }}" placeholder="Search Nodes">
-                            <div class="input-group-btn">
-                                <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
-                                <a href="{{ route('admin.nodes.new') }}"><button type="button" class="btn btn-sm btn-primary" style="border-radius: 0 3px 3px 0;margin-left:-1px;">Create New</button></a>
-                            </div>
-                        </div>
-                    </form>
+<div class="flex items-center justify-between mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-100">
+            <div class="flex items-center space-x-4">
+                <div class="p-2 bg-accent-purple/10 rounded-lg">
+                    <i class="fas fa-server text-accent-purple"></i>
+                </div>
+                <div>
+                    Nodes
+                    <small class="block mt-1 text-base font-normal text-gray-400">All nodes available on the
+                        system.</small>
                 </div>
             </div>
-            <div class="box-body table-responsive no-padding">
-                <table class="table table-hover">
-                    <tbody>
-                        <tr>
-                            <th></th>
-                            <th>Name</th>
-                            <th>Location</th>
-                            <th>Memory</th>
-                            <th>Disk</th>
-                            <th class="text-center">Servers</th>
-                            <th class="text-center">SSL</th>
-                            <th class="text-center">Public</th>
-                        </tr>
-                        @foreach ($nodes as $node)
-                            <tr>
-                                <td class="text-center text-muted left-icon" data-action="ping" data-secret="{{ $node->getDecryptedKey() }}" data-location="{{ $node->scheme }}://{{ $node->fqdn }}:{{ $node->daemonListen }}/api/system"><i class="fa fa-fw fa-refresh fa-spin"></i></td>
-                                <td>{!! $node->maintenance_mode ? '<span class="label label-warning"><i class="fa fa-wrench"></i></span> ' : '' !!}<a href="{{ route('admin.nodes.view', $node->id) }}">{{ $node->name }}</a></td>
-                                <td>{{ $node->location->short }}</td>
-                                <td>{{ $node->memory }} MiB</td>
-                                <td>{{ $node->disk }} MiB</td>
-                                <td class="text-center">{{ $node->servers_count }}</td>
-                                <td class="text-center" style="color:{{ ($node->scheme === 'https') ? '#50af51' : '#d9534f' }}"><i class="fa fa-{{ ($node->scheme === 'https') ? 'lock' : 'unlock' }}"></i></td>
-                                <td class="text-center"><i class="fa fa-{{ ($node->public) ? 'eye' : 'eye-slash' }}"></i></td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            @if($nodes->hasPages())
-                <div class="box-footer with-border">
-                    <div class="col-md-12 text-center">{!! $nodes->appends(['query' => Request::input('query')])->render() !!}</div>
+        </h1>
+    </div>
+    <div class="flex items-center space-x-3">
+        <form action="{{ route('admin.nodes') }}" method="GET">
+            <div class="relative">
+                <input type="text" name="filter[name]" value="{{ request()->input('filter.name') }}"
+                    class="w-64 bg-background/50 text-white rounded-xl py-2.5 pl-11 pr-4 border border-gray-700 focus:border-accent-purple focus:ring-1 focus:ring-accent-purple focus:ring-opacity-50 transition-all duration-300"
+                    placeholder="Search nodes...">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-500"></i>
                 </div>
-            @endif
-        </div>
+            </div>
+        </form>
+        <a href="{{ route('admin.nodes.new') }}"
+            class="flex items-center px-4 py-2 bg-accent-purple text-white rounded-xl hover:bg-accent-purple/80 transition-all duration-300 group">
+            <i class="fas fa-plus-circle mr-2 group-hover:scale-110 transition-transform duration-300"></i>
+            Create Node
+        </a>
     </div>
 </div>
+<div class="grid gap-6">
+    @foreach ($nodes as $node)
+        <div
+            class="glass-card rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-accent-purple/10 border border-gray-700/50">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <div class="w-12 h-12 rounded-xl bg-accent-purple/10 flex items-center justify-center">
+                                <i class="fas fa-server text-accent-purple text-xl"></i>
+                            </div>
+                            <div class="absolute -bottom-1 -right-1 flex items-center space-x-1" data-action="ping"
+                                data-secret="{{ $node->getDecryptedKey() }}"
+                                data-location="{{ $node->scheme }}://{{ $node->fqdn }}:{{ $node->daemonListen }}/api/system">
+                                <div class="status-indicator">
+                                    <i class="fas fa-circle-notch fa-spin text-gray-500"></i>
+                                    <span class="status-version text-xs ml-1 hidden"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-3">
+                                <a href="{{ route('admin.nodes.view', $node->id) }}"
+                                    class="text-lg font-semibold text-gray-100 hover:text-accent-purple transition-colors">
+                                    {{ $node->name }}
+                                </a>
+                                @if($node->maintenance_mode)
+                                    <span class="px-2.5 py-1 text-xs bg-yellow-500/10 text-yellow-500 rounded-full">
+                                        <i class="fas fa-wrench mr-1"></i>
+                                        Maintenance
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="flex items-center mt-1 space-x-4 text-sm text-gray-400">
+                                <span>
+                                    <i class="fas fa-map-marker-alt mr-1.5"></i>
+                                    {{ $node->location->short }}
+                                </span>
+                                <span>
+                                    <i class="fas fa-memory mr-1.5"></i>
+                                    {{ $node->memory }} MiB
+                                </span>
+                                <span>
+                                    <i class="fas fa-hdd mr-1.5"></i>
+                                    {{ $node->disk }} MiB
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-6">
+                        <div class="flex flex-col items-center">
+                            <span class="text-2xl font-bold text-gray-100">{{ $node->servers_count }}</span>
+                            <span class="text-xs text-gray-400 mt-1">Servers</span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="flex flex-col items-center">
+                                <i class="fa fa-{{ ($node->scheme === 'https') ? 'lock' : 'unlock' }} text-xl mb-1"
+                                    class="{{ ($node->scheme === 'https') ? 'text-emerald-500' : 'text-red-500' }}"></i>
+                                <span class="text-xs text-gray-400">SSL</span>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <i class="fa fa-{{ ($node->public) ? 'eye' : 'eye-slash' }} text-xl mb-1 text-gray-300"></i>
+                                <span class="text-xs text-gray-400">Visibility</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+@if($nodes->hasPages())
+    <div class="mt-6">
+        <div class="flex justify-center">
+            {!! $nodes->appends(['query' => Request::input('query')])->render() !!}
+        </div>
+    </div>
+@endif
 @endsection
 
 @section('footer-scripts')
-    @parent
-    <script>
-    (function pingNodes() {
-        $('td[data-action="ping"]').each(function(i, element) {
-            $.ajax({
-                type: 'GET',
-                url: $(element).data('location'),
-                headers: {
-                    'Authorization': 'Bearer ' + $(element).data('secret'),
-                },
-                timeout: 5000
-            }).done(function (data) {
-                $(element).find('i').tooltip({
-                    title: 'v' + data.version,
-                });
-                $(element).removeClass('text-muted').find('i').removeClass().addClass('fa fa-fw fa-heartbeat faa-pulse animated').css('color', '#50af51');
-            }).fail(function (error) {
-                var errorText = 'Error connecting to node! Check browser console for details.';
-                try {
-                    errorText = error.responseJSON.errors[0].detail || errorText;
-                } catch (ex) {}
+@parent
+<style>
+.status-indicator {
+    display: flex;
+    align-items: center;
+    padding: 2px 6px;
+    border-radius: 9999px;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+}
 
-                $(element).removeClass('text-muted').find('i').removeClass().addClass('fa fa-fw fa-heart-o').css('color', '#d9534f');
-                $(element).find('i').tooltip({ title: errorText });
-            });
-        }).promise().done(function () {
-            setTimeout(pingNodes, 10000);
+.status-version {
+    color: #9CA3AF;
+    font-size: 0.7rem;
+}
+</style>
+<script>
+(function pingNodes() {
+    $('div[data-action="ping"]').each(function(i, element) {
+        const $element = $(element);
+        const $indicator = $element.find('.status-indicator i');
+        const $version = $element.find('.status-version');
+
+        $.ajax({
+            type: 'GET',
+            url: $element.data('location'),
+            headers: {
+                'Authorization': 'Bearer ' + $element.data('secret'),
+            },
+            timeout: 5000
+        }).done(function(data) {
+            $indicator
+                .removeClass('fa-circle-notch fa-spin text-gray-500')
+                .addClass('fa-circle text-emerald-500');
+            $version
+                .removeClass('hidden');
+        }).fail(function(error) {
+            $indicator
+                .removeClass('fa-circle-notch fa-spin text-gray-500')
+                .addClass('fa-circle text-red-500');
+            $version
+                .removeClass('hidden');
         });
-    })();
-    </script>
+    }).promise().done(function() {
+        setTimeout(pingNodes, 10000);
+    });
+})();
+</script>
 @endsection

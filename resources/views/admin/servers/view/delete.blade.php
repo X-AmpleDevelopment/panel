@@ -16,38 +16,70 @@
 
 @section('content')
 @include('admin.servers.partials.navigation')
-<div class="row">
-    <div class="col-md-6">
-        <div class="box">
-            <div class="box-header with-border">
-                <h3 class="box-title">Safely Delete Server</h3>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Safe Delete -->
+    <div>
+        <div class="glass-card rounded-lg overflow-hidden">
+            <div class="p-6 border-b border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-red-500/10 rounded-lg">
+                        <i class="fas fa-trash text-red-500"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-100">Safely Delete Server</h3>
+                </div>
             </div>
-            <div class="box-body">
-                <p>This action will attempt to delete the server from both the panel and daemon. If either one reports an error the action will be cancelled.</p>
-                <p class="text-danger small">Deleting a server is an irreversible action. <strong>All server data</strong> (including files and users) will be removed from the system.</p>
-            </div>
-            <div class="box-footer">
+            <div class="p-6">
+                <div class="alert flex items-center p-4 rounded-lg bg-red-500/10 text-red-500 mb-4">
+                    <i class="fas fa-exclamation-triangle mr-3"></i>
+                    <div>
+                        <p class="font-medium">Warning: Destructive Action</p>
+                        <p class="text-sm mt-1">This action will delete all server data including files and users.</p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400 mb-6">
+                    This action will attempt to delete the server from both the panel and daemon. If either one reports an error the action will be cancelled.
+                </p>
                 <form id="deleteform" action="{{ route('admin.servers.view.delete', $server->id) }}" method="POST">
                     {!! csrf_field() !!}
-                    <button id="deletebtn" class="btn btn-danger">Safely Delete This Server</button>
+                    <button id="deletebtn" type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                        <i class="fas fa-trash mr-2"></i>
+                        Safely Delete Server
+                    </button>
                 </form>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="box box-danger">
-            <div class="box-header with-border">
-                <h3 class="box-title">Force Delete Server</h3>
+
+    <!-- Force Delete -->
+    <div>
+        <div class="glass-card rounded-lg overflow-hidden">
+            <div class="p-6 border-b border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-red-500/10 rounded-lg">
+                        <i class="fas fa-bomb text-red-500"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-100">Force Delete Server</h3>
+                </div>
             </div>
-            <div class="box-body">
-                <p>This action will attempt to delete the server from both the panel and daemon. If the daemon does not respond, or reports an error the deletion will continue.</p>
-                <p class="text-danger small">Deleting a server is an irreversible action. <strong>All server data</strong> (including files and users) will be removed from the system. This method may leave dangling files on your daemon if it reports an error.</p>
-            </div>
-            <div class="box-footer">
+            <div class="p-6">
+                <div class="alert flex items-center p-4 rounded-lg bg-red-500/10 text-red-500 mb-4">
+                    <i class="fas fa-exclamation-triangle mr-3"></i>
+                    <div>
+                        <p class="font-medium">Warning: Highly Destructive Action</p>
+                        <p class="text-sm mt-1">This may leave dangling files on your daemon if it reports an error.</p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-400 mb-6">
+                    This action will attempt to delete the server from both the panel and daemon. If the daemon does not respond, or reports an error the deletion will continue.
+                </p>
                 <form id="forcedeleteform" action="{{ route('admin.servers.view.delete', $server->id) }}" method="POST">
                     {!! csrf_field() !!}
                     <input type="hidden" name="force_delete" value="1" />
-                    <button id="forcedeletebtn"" class="btn btn-danger">Forcibly Delete This Server</button>
+                    <button id="forcedeletebtn" type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                        <i class="fas fa-bomb mr-2"></i>
+                        Force Delete Server
+                    </button>
                 </form>
             </div>
         </div>
@@ -58,34 +90,43 @@
 @section('footer-scripts')
     @parent
     <script>
-    $('#deletebtn').click(function (event) {
-        event.preventDefault();
-        swal({
-            title: '',
-            type: 'warning',
-            text: 'Are you sure that you want to delete this server? There is no going back, all data will immediately be removed.',
+    function showDeleteConfirmation(formId) {
+        const form = document.getElementById(formId);
+        const isForceDelete = formId === 'forcedeleteform';
+
+        const title = isForceDelete ? 'Force Delete Server' : 'Delete Server';
+        const text = 'Are you sure you want to delete this server? This action cannot be undone and all data will be permanently removed.';
+
+        Swal.fire({
+            title: title,
+            text: text,
+            icon: 'warning',
             showCancelButton: true,
+            confirmButtonColor: '#EF4444',
+            cancelButtonColor: '#6B7280',
             confirmButtonText: 'Delete',
-            confirmButtonColor: '#d9534f',
-            closeOnConfirm: false
-        }, function () {
-            $('#deleteform').submit()
+            cancelButtonText: 'Cancel',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
         });
+    }
+
+    document.getElementById('deletebtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        showDeleteConfirmation('deleteform');
     });
 
-    $('#forcedeletebtn').click(function (event) {
-        event.preventDefault();
-        swal({
-            title: '',
-            type: 'warning',
-            text: 'Are you sure that you want to delete this server? There is no going back, all data will immediately be removed.',
-            showCancelButton: true,
-            confirmButtonText: 'Delete',
-            confirmButtonColor: '#d9534f',
-            closeOnConfirm: false
-        }, function () {
-            $('#forcedeleteform').submit()
-        });
+    document.getElementById('forcedeletebtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        showDeleteConfirmation('forcedeleteform');
     });
     </script>
+
+    <style>
+        .glass-card {
+            @apply bg-background-darker bg-opacity-50 backdrop-blur-sm;
+        }
+    </style>
 @endsection

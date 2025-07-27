@@ -4,167 +4,224 @@
     {{ $node->name }}
 @endsection
 
-@section('content-header')
-    <h1>{{ $node->name }}<small>A quick overview of your node.</small></h1>
-    <ol class="breadcrumb">
-        <li><a href="{{ route('admin.index') }}">Admin</a></li>
-        <li><a href="{{ route('admin.nodes') }}">Nodes</a></li>
-        <li class="active">{{ $node->name }}</li>
-    </ol>
-@endsection
-
 @section('content')
-<div class="row">
-    <div class="col-xs-12">
-        <div class="nav-tabs-custom nav-tabs-floating">
-            <ul class="nav nav-tabs">
-                <li class="active"><a href="{{ route('admin.nodes.view', $node->id) }}">About</a></li>
-                <li><a href="{{ route('admin.nodes.view.settings', $node->id) }}">Settings</a></li>
-                <li><a href="{{ route('admin.nodes.view.configuration', $node->id) }}">Configuration</a></li>
-                <li><a href="{{ route('admin.nodes.view.allocation', $node->id) }}">Allocation</a></li>
-                <li><a href="{{ route('admin.nodes.view.servers', $node->id) }}">Servers</a></li>
-            </ul>
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-100">
+                    <div class="flex items-center space-x-4">
+                        <div class="p-2 bg-accent-purple/10 rounded-lg">
+                            <i class="fas fa-server text-accent-purple"></i>
+                        </div>
+                        <div>
+                            {{ $node->name }}
+                            <small class="block mt-1 text-base font-normal text-gray-400">Node Overview & Management</small>
+                        </div>
+                    </div>
+                </h1>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="{{ route('admin.nodes') }}"
+                   class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-all duration-300 group">
+                    <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform"></i>
+                    Back to Nodes
+                </a>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex items-center space-x-2 mt-8 border-b border-gray-700">
+            <a href="{{ route('admin.nodes.view', $node->id) }}"
+               class="px-5 py-2.5 text-sm font-medium rounded-t-lg bg-accent-purple text-white border-b-2 border-accent-purple">
+                Overview
+            </a>
+            <a href="{{ route('admin.nodes.view.settings', $node->id) }}"
+               class="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition-colors">
+                Settings
+            </a>
+            <a href="{{ route('admin.nodes.view.configuration', $node->id) }}"
+               class="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition-colors">
+                Configuration
+            </a>
+            <a href="{{ route('admin.nodes.view.allocation', $node->id) }}"
+               class="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition-colors">
+                Allocation
+            </a>
+            <a href="{{ route('admin.nodes.view.servers', $node->id) }}"
+               class="px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-white transition-colors">
+                Servers
+            </a>
         </div>
     </div>
-</div>
-<div class="row">
-    <div class="col-sm-8">
-        <div class="row">
-            <div class="col-xs-12">
-                <div class="box box-primary">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Information</h3>
+
+    <div class="grid grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="col-span-2 space-y-8">
+            <!-- System Information -->
+            <div class="glass-card rounded-lg overflow-hidden">
+                <div class="p-5 border-b border-gray-700">
+                    <h3 class="text-xl font-semibold gradient-text">System Information</h3>
+                </div>
+                <div class="p-5 space-y-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="bg-background/50 rounded-lg p-4 flex items-center space-x-4">
+                            <div class="p-3 bg-accent-purple/10 rounded-lg">
+                                <i class="fas fa-code-branch text-accent-purple text-xl"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-400">Daemon Version</div>
+                                <div class="text-lg font-semibold text-gray-100 flex items-center space-x-2">
+                                    <code data-attr="info-version" class="bg-background px-2 py-0.5 rounded text-accent-blue">
+                                        <i class="fas fa-circle-notch fa-spin"></i>
+                                    </code>
+                                    <span class="text-sm text-gray-400">(Latest: <code class="bg-background px-2 py-0.5 rounded text-emerald-500">{{ $version->getDaemon() }}</code>)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-background/50 rounded-lg p-4 flex items-center space-x-4">
+                            <div class="p-3 bg-accent-purple/10 rounded-lg">
+                                <i class="fas fa-microchip text-accent-purple text-xl"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm text-gray-400">CPU Threads</div>
+                                <div data-attr="info-cpus" class="text-lg font-semibold text-gray-100">
+                                    <i class="fas fa-circle-notch fa-spin"></i>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="box-body table-responsive no-padding">
-                        <table class="table table-hover">
-                            <tr>
-                                <td>Daemon Version</td>
-                                <td><code data-attr="info-version"><i class="fa fa-refresh fa-fw fa-spin"></i></code> (Latest: <code>{{ $version->getDaemon() }}</code>)</td>
-                            </tr>
-                            <tr>
-                                <td>System Information</td>
-                                <td data-attr="info-system"><i class="fa fa-refresh fa-fw fa-spin"></i></td>
-                            </tr>
-                            <tr>
-                                <td>Total CPU Threads</td>
-                                <td data-attr="info-cpus"><i class="fa fa-refresh fa-fw fa-spin"></i></td>
-                            </tr>
-                        </table>
+                    <div class="bg-background/50 rounded-lg p-4 flex items-center space-x-4">
+                        <div class="p-3 bg-accent-purple/10 rounded-lg">
+                            <i class="fas fa-server text-accent-purple text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-400">System Information</div>
+                            <div data-attr="info-system" class="text-lg font-semibold text-gray-100">
+                                <i class="fas fa-circle-notch fa-spin"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
             @if ($node->description)
-                <div class="col-xs-12">
-                    <div class="box box-default">
-                        <div class="box-header with-border">
-                            Description
-                        </div>
-                        <div class="box-body table-responsive">
-                            <pre>{{ $node->description }}</pre>
-                        </div>
+                <!-- Description -->
+                <div class="glass-card rounded-lg overflow-hidden">
+                    <div class="p-5 border-b border-gray-700">
+                        <h3 class="text-xl font-semibold gradient-text">Description</h3>
+                    </div>
+                    <div class="p-5">
+                        <pre class="bg-background/50 rounded-lg p-4 text-gray-200">{{ $node->description }}</pre>
                     </div>
                 </div>
             @endif
-            <div class="col-xs-12">
-                <div class="box box-danger">
-                    <div class="box-header with-border">
-                        <h3 class="box-title">Delete Node</h3>
-                    </div>
-                    <div class="box-body">
-                        <p class="no-margin">Deleting a node is a irreversible action and will immediately remove this node from the panel. There must be no servers associated with this node in order to continue.</p>
-                    </div>
-                    <div class="box-footer">
+
+            <!-- Danger Zone -->
+            <div class="glass-card rounded-lg overflow-hidden border border-red-500/20">
+                <div class="p-5 border-b border-gray-700">
+                    <h3 class="text-xl font-semibold text-red-500">Danger Zone</h3>
+                </div>
+                <div class="p-5">
+                    <p class="text-gray-400">Deleting a node is an irreversible action and will immediately remove this node from the panel. There must be no servers associated with this node in order to continue.</p>
+                    <div class="mt-4">
                         <form action="{{ route('admin.nodes.view.delete', $node->id) }}" method="POST">
                             {!! csrf_field() !!}
                             {!! method_field('DELETE') !!}
-                            <button type="submit" class="btn btn-danger btn-sm pull-right" {{ ($node->servers_count < 1) ?: 'disabled' }}>Yes, Delete This Node</button>
+                            <button type="submit"
+                                    {{ ($node->servers_count < 1) ?: 'disabled' }}
+                                    class="px-4 py-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-trash mr-2"></i>
+                                Delete Node
+                            </button>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-sm-4">
-        <div class="box box-primary">
-            <div class="box-header with-border">
-                <h3 class="box-title">At-a-Glance</h3>
-            </div>
-            <div class="box-body">
-                <div class="row">
-                    @if($node->maintenance_mode)
-                    <div class="col-sm-12">
-                        <div class="info-box bg-orange">
-                            <span class="info-box-icon"><i class="ion ion-wrench"></i></span>
-                            <div class="info-box-content" style="padding: 23px 10px 0;">
-                                <span class="info-box-text">This node is under</span>
-                                <span class="info-box-number">Maintenance</span>
-                            </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-8">
+            <!-- Quick Stats -->
+            @if($node->maintenance_mode)
+                <div class="glass-card rounded-lg p-5 border-2 border-yellow-500/20 bg-yellow-500/5">
+                    <div class="flex items-center space-x-4">
+                        <div class="p-3 bg-yellow-500/10 rounded-lg">
+                            <i class="fas fa-wrench text-yellow-500 text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-yellow-500">Maintenance Mode</div>
+                            <div class="text-lg font-semibold text-yellow-500">Active</div>
                         </div>
                     </div>
-                    @endif
-                    <div class="col-sm-12">
-                        <div class="info-box bg-{{ $stats['disk']['css'] }}">
-                            <span class="info-box-icon"><i class="ion ion-ios-folder-outline"></i></span>
-                            <div class="info-box-content" style="padding: 15px 10px 0;">
-                                <span class="info-box-text">Disk Space Allocated</span>
-                                <span class="info-box-number">{{ $stats['disk']['value'] }} / {{ $stats['disk']['max'] }} MiB</span>
-                                <div class="progress">
-                                    <div class="progress-bar" style="width: {{ $stats['disk']['percent'] }}%"></div>
-                                </div>
-                            </div>
+                </div>
+            @endif
+
+            <!-- Resource Usage -->
+            <div class="glass-card rounded-lg overflow-hidden">
+                <div class="p-5 border-b border-gray-700">
+                    <h3 class="text-xl font-semibold gradient-text">Resource Usage</h3>
+                </div>
+                <div class="p-5 space-y-6">
+                    <!-- Memory -->
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm text-gray-400">Memory</span>
+                            <span class="text-sm text-gray-400">{{ $stats['memory']['value'] }} / {{ $stats['memory']['max'] }} MiB</span>
+                        </div>
+                        <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-accent-purple transition-all duration-300"
+                                 style="width: {{ $stats['memory']['percent'] }}%"></div>
                         </div>
                     </div>
-                    <div class="col-sm-12">
-                        <div class="info-box bg-{{ $stats['memory']['css'] }}">
-                            <span class="info-box-icon"><i class="ion ion-ios-barcode-outline"></i></span>
-                            <div class="info-box-content" style="padding: 15px 10px 0;">
-                                <span class="info-box-text">Memory Allocated</span>
-                                <span class="info-box-number">{{ $stats['memory']['value'] }} / {{ $stats['memory']['max'] }} MiB</span>
-                                <div class="progress">
-                                    <div class="progress-bar" style="width: {{ $stats['memory']['percent'] }}%"></div>
-                                </div>
-                            </div>
+
+                    <!-- Disk -->
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-sm text-gray-400">Disk Space</span>
+                            <span class="text-sm text-gray-400">{{ $stats['disk']['value'] }} / {{ $stats['disk']['max'] }} MiB</span>
+                        </div>
+                        <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-accent-blue transition-all duration-300"
+                                 style="width: {{ $stats['disk']['percent'] }}%"></div>
                         </div>
                     </div>
-                    <div class="col-sm-12">
-                        <div class="info-box bg-blue">
-                            <span class="info-box-icon"><i class="ion ion-social-buffer-outline"></i></span>
-                            <div class="info-box-content" style="padding: 23px 10px 0;">
-                                <span class="info-box-text">Total Servers</span>
-                                <span class="info-box-number">{{ $node->servers_count }}</span>
-                            </div>
+
+                    <!-- Servers -->
+                    <div class="bg-background/50 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div class="text-sm text-gray-400">Total Servers</div>
+                            <div class="text-2xl font-bold text-gray-100">{{ $node->servers_count }}</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 @endsection
 
 @section('footer-scripts')
     @parent
     <script>
-    function escapeHtml(str) {
-        var div = document.createElement('div');
-        div.appendChild(document.createTextNode(str));
-        return div.innerHTML;
-    }
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
 
-    (function getInformation() {
-        $.ajax({
-            method: 'GET',
-            url: '/admin/nodes/view/{{ $node->id }}/system-information',
-            timeout: 5000,
-        }).done(function (data) {
-            $('[data-attr="info-version"]').html(escapeHtml(data.version));
-            $('[data-attr="info-system"]').html(escapeHtml(data.system.type) + ' (' + escapeHtml(data.system.arch) + ') <code>' + escapeHtml(data.system.release) + '</code>');
-            $('[data-attr="info-cpus"]').html(data.system.cpus);
-        }).fail(function (jqXHR) {
-
-        }).always(function() {
-            setTimeout(getInformation, 10000);
-        });
-    })();
+        (function getInformation() {
+            $.ajax({
+                method: 'GET',
+                url: '/admin/nodes/view/{{ $node->id }}/system-information',
+                timeout: 5000,
+            }).done(function (data) {
+                $('[data-attr="info-version"]').html(escapeHtml(data.version));
+                $('[data-attr="info-system"]').html(escapeHtml(data.system.type) + ' (' + escapeHtml(data.system.arch) + ') <code class="bg-background px-2 py-0.5 rounded text-accent-blue">' + escapeHtml(data.system.release) + '</code>');
+                $('[data-attr="info-cpus"]').html(data.system.cpus);
+            }).fail(function (jqXHR) {
+                // Handle error
+            }).always(function() {
+                setTimeout(getInformation, 10000);
+            });
+        })();
     </script>
 @endsection
